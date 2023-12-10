@@ -631,7 +631,7 @@ for (arq in arquivos_radares$arqs) {
       # comp  = substr(X1, 40, 42),
       # vel_p = substr(X1, 43, 45),
       # tocup = substr(X1, 46, 50),
-      vel_m = substr(X1, 51, 53),
+      vel_m = substr(X1, 51, 53)
     ) %>%
     select(-X1)
 
