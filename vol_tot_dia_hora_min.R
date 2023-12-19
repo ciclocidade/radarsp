@@ -14,14 +14,6 @@
 # juntar à base orginal locais com volume zero
 # retornar base
 
-dia_inicio <- "20190102"
-dia_fim <- "20190103"
-
-path_to_save <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byday/"
-
-datas <- c(paste0("2019010", c(1:9)),
-           paste0("201901", c(10:31)))
-
 vol_tot_dia_hora_min <- function(
   dia_inicio = NULL,
   dia_fim = NULL,
@@ -41,7 +33,7 @@ vol_tot_dia_hora_min <- function(
           dia_inicio_aux, dia_fim_aux, by = 1)), 
       "-", "")
     
-    files_radares <- list.files("data/radares/", ".txt")
+    files_radares <- list.files(path_files, ".txt")
     
     files_to_read <- str_subset(files_radares, intervalo)
     
@@ -77,7 +69,8 @@ vol_tot_dia_hora_min <- function(
           # tipo_veic = substr(X1, 38, 38),
           # class = substr(X1, 39, 39),
           # comp  = substr(X1, 40, 42),
-          vel_p = as.numeric(substr(X1, 43, 45))/(60*60/1000), # verificar
+    # converter velocidade de décimo de metros/segundo para km/h: (60*60/10000)
+          vel_p = as.numeric(substr(X1, 43, 45))*0.36, 
           # tocup = substr(X1, 46, 50),
           # vel_m = substr(X1, 51, 53)
           ) %>%
@@ -120,9 +113,11 @@ vol_tot_dia_hora_min <- function(
         group_by(data, local, hora, min) %>% 
         summarise(volume = n(),
                   vel_p_sd = sd(as.numeric(vel_p), na.rm = TRUE),
+                  vel_p_med = median(as.numeric(vel_p), na.rm = TRUE),
                   vel_p = mean(as.numeric(vel_p), na.rm = TRUE),
                   
                   vel_p_sd = sprintf('%.2f',round(vel_p_sd, 2)),
+                  vel_p_med = sprintf('%.2f',round(vel_p_med, 2)),
                   vel_p = sprintf('%.2f', round(vel_p, 2)))
       
       nchar30 <- nchar30 %>% 
@@ -130,8 +125,9 @@ vol_tot_dia_hora_min <- function(
         left_join(df_radares, by = c("data", "local", "hora", "min")) %>% 
         filter(is.na(volume)) %>% 
         mutate(volume = 0,
-               vel_p = NA_integer_,
-               vel_p_sd = NA_integer_) %>% 
+               vel_p = NA_character_,
+               vel_p_med = NA_character_,
+               vel_p_sd = NA_character_) %>% 
         select(-obs)
       
       df_radares <- df_radares %>% 
@@ -141,14 +137,15 @@ vol_tot_dia_hora_min <- function(
                local = str_pad(local, 4, "left"), 
                hora = str_pad(hora, 2, "left"), 
                min = str_pad(min, 2, "left"), 
-               volume = str_pad(volume, 6, "left"), 
-               vel_p = str_pad(as.character(vel_p, 6, "left")), # 6 se o ponto contar
-               vel_p_sd = str_pad(as.character(vel_p_sd, 6, "left")))
+               volume = str_pad(volume, 4, "left"), # máximo 9 999 veículos em 15 min
+               vel_p = str_pad(as.character(vel_p), 6, "left"), # 6 se o ponto contar
+               vel_p_med = str_pad(as.character(vel_p_med), 6, "left"), 
+               vel_p_sd = str_pad(as.character(vel_p_sd), 6, "left"))
       
       if(!return_df & save_df){
         df_radares <- df_radares %>% 
           ungroup() %>% 
-          mutate(X1 = paste0(data, local, hora, min, volume, vel_p, vel_p_sd)) %>% 
+          mutate(X1 = paste0(data, local, hora, min, volume, vel_p, vel_p_med, vel_p_sd)) %>% 
           select(X1)
         
         # salvar arquivo sem delimitação de colunas
@@ -164,7 +161,7 @@ vol_tot_dia_hora_min <- function(
       }else if(return_df & save_df){
         write.table(df_radares %>% 
                       ungroup() %>% 
-                      mutate(X1 = paste0(data, local, hora, min, volume, vel_p, vel_p_sd)) %>% 
+                      mutate(X1 = paste0(data, local, hora, min, volume, vel_p, vel_p_med, vel_p_sd)) %>% 
                       select(X1),
                     paste0(
                       path_to_save,
@@ -177,12 +174,19 @@ vol_tot_dia_hora_min <- function(
       }else if(return_df & !save_df){
         return(df_radares)
       }
-      # converter velocidade de metros/segundo para km/h
+      
     }
   }
 }
 
-for(i in seq_along(datas)){
+
+path_to_save <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/by15min/"
+
+datas <- c(paste0("2019010", c(1:9)),
+           paste0("201901", c(10:31)))
+
+# for(i in seq_along(datas)){
+for(i in 29:length(datas)){
   vol_tot_dia_hora_min(
     dia_inicio = datas[i],
     dia_fim = datas[i],
@@ -192,48 +196,3 @@ for(i in seq_along(datas)){
   
   print(datas[i])
 }
-
-
-df_radares %>% 
-  group_by(data, hora, min) %>% 
-  summarise(volume = sum(volume)) %>% 
-  ungroup() %>% 
-  mutate(min = factor(min, levels = c("04", "03", "02", "01"))) %>% 
-  ggplot(aes(x = hora, y = volume, fill = min))+
-  geom_bar(stat="identity")+
-  facet_wrap(~data)+
-  scale_y_continuous(labels = scales::comma)+
-  labs(x = "Hora",
-       y = "Volume") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-df_radares %>% 
-  group_by(data, hora, min) %>% 
-  summarise(volume = sum(volume)) %>% 
-  ungroup() %>% 
-  mutate(min = factor(min, levels = c("04", "03", "02", "01"))) %>% 
-  ggplot(aes(x = hora, y = volume, fill = min))+
-  geom_bar(stat="identity", position = "fill")+
-  geom_hline(yintercept = 0.25, linetype = "dashed", size = 0.25)+
-  geom_hline(yintercept = 0.50, linetype = "dashed", size = 0.25)+
-  geom_hline(yintercept = 0.75, linetype = "dashed", size = 0.25)+
-  facet_wrap(~data)+
-  scale_y_continuous(labels = scales::comma)+
-  labs(x = "Hora",
-       y = "Volume") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-df_radares %>% 
-  group_by(data, hora, min) %>% 
-  summarise(volume = sum(volume)) %>% 
-  ungroup() %>% 
-  mutate(type = ifelse(min %in% c("01", "02"), "early", "late"),
-         type = factor(type, levels = c("late", "early"))) %>% 
-  ggplot(aes(x = hora, y = volume, fill = type))+
-  geom_bar(stat="identity", position = "fill")+
-  geom_hline(yintercept = 0.50, linetype = "dashed", size = 0.25)+
-  facet_wrap(~data)+
-  scale_y_continuous(labels = scales::comma)+
-  labs(x = "Hora",
-       y = "Volume") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))

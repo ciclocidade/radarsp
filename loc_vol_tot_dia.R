@@ -6,15 +6,16 @@
 # agrupar base em dia<>local, somando os volumes
 # retornar base e/ou salvar
 
-dia_inicio <- datas[1]
-dia_fim <- datas[1]
+dia_inicio <- datas[3]
+dia_fim <- datas[3]
 
-vol_tot_dia <- function(
+loc_vol_tot_dia <- function(
   dia_inicio = NULL,
   dia_fim = NULL,
   path_files = NULL,
   return_df = FALSE,
-  save_df = TRUE){
+  save_df = TRUE,
+  path_to_save = NULL){
   
   if (is.null(dia_inicio) | is.null(dia_fim)) {
     print("Defina dia de início e dia de fim para a busca.")
@@ -39,81 +40,89 @@ vol_tot_dia <- function(
       df_radares <- map_df(
         paste0(path_files, files_to_read),
         readr::read_delim, delim = "other", escape_double = FALSE, 
-          col_names = FALSE, trim_ws = TRUE)
-      
-      # df_radares <- df_radares %>% 
-      #   mutate(nchar = nchar(X1))
-      # 
-      # nchar30 <- df_radares %>% 
-      #   filter(nchar < 53)
+        col_names = FALSE, trim_ws = TRUE)
       
       df_radares <- df_radares %>% 
-        # filter(nchar(X1) == 53) %>% 
         mutate(
           data  = substr(X1, 1, 8),
           local = substr(X1, 9, 12),
-          volume = as.numeric(substr(X1, 15, 18))) %>%
-        select(-X1) 
+          volume = as.numeric(substr(X1, 13, 18))) %>%
+        select(-X1)
       
-      df_radares <- df_radares %>% 
-        group_by(data, local) %>% 
-        summarise(volume = sum(volume, na.rm = TRUE)) %>% 
-        ungroup() %>% 
-        mutate(data = str_pad(data, 8, "left"), #sprintf("% 8s", vec)
-               local = str_pad(local, 4, "left"), 
-               volume = str_pad(volume, 6, "left")) # máximo 999 999 veículos em 15 min)
+      vec_locais <- unique(df_radares$local)
       
-      if(!return_df & save_df){
-        df_radares <- df_radares %>% 
-          ungroup() %>% 
+      for(loc in vec_locais){
+        if (!dir.exists(paste0(path_to_save, loc))) {
+          dir.create(paste0(path_to_save, loc))
+        }
+        
+        df_aux <- df_radares %>% 
+          filter(local == loc) %>% 
+          mutate(data = str_pad(data, 8, "left"), #sprintf("% 8s", vec)
+                 local = str_pad(local, 4, "left"), 
+                 volume = str_pad(volume, 6, "left")) %>%  # máximo 999 999 veículos em 15 min)
           mutate(X1 = paste0(data, local, volume)) %>% 
           select(X1)
         
         # salvar arquivo sem delimitação de colunas
-        write.table(df_radares,
+        write.table(df_aux,
                     paste0(
-                      path_to_save,
+                      path_to_save, 
+                      loc, "/", 
+                      loc, "_",
                       ifelse(
                         dia_inicio == dia_fim, 
                         dia_inicio,
                         paste0(dia_inicio,"-", dia_fim)),
                       ".csv"),
                     row.names = FALSE, col.names = FALSE)
-      }else if(return_df & save_df){
-        write.table(df_radares %>% 
-                      ungroup() %>% 
-                      mutate(X1 = paste0(data, local, volume)) %>% 
-                      select(X1),
-                    paste0(
-                      path_to_save,
-                      ifelse(
-                        dia_inicio == dia_fim, 
-                        dia_inicio,
-                        paste0(dia_inicio,"-", dia_fim)),
-                      ".csv"),
-                    row.names = FALSE, col.names = FALSE)
-      }else if(return_df & !save_df){
-        return(df_radares)
       }
     }
   }
 }
 
-path_to_save <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byday/"
-path_files <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byhour/"
+path_to_save <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/loc_byday/"
+path_files <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byday/"
 
 datas <- c(paste0("2019010", c(1:9)),
            paste0("201901", c(10:31)))
 
 for(i in seq_along(datas)){
-  vol_tot_dia(
+  loc_vol_tot_dia(
     dia_inicio = datas[i],
     dia_fim = datas[i],
     path_files = path_files,
     return_df = FALSE,
-    save_df = TRUE)
+    save_df = TRUE,
+    path_to_save = path_to_save)
   
   gc()
   
   print(datas[i])
 }
+
+
+
+vec_locais <- list.dirs(path_to_save,
+                        full.names = FALSE,
+                        recursive = FALSE)
+for(loc in vec_locais){
+  files_to_read <- list.files(paste0(path_to_save, loc))
+  
+  df_loc <- map_df(
+    paste0(paste0(path_to_save, loc, "/", files_to_read)),
+    readr::read_delim, delim = "other", escape_double = FALSE, 
+    col_names = FALSE, trim_ws = TRUE)
+  
+  map(paste0(paste0(path_to_save, loc, "/", files_to_read)), 
+      file.remove)
+  
+  write.table(df_loc,
+              paste0(
+                path_to_save, 
+                loc, "/", 
+                loc, "_201901.csv"),
+              row.names = FALSE, col.names = FALSE)
+  
+}
+
