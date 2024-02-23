@@ -3,10 +3,11 @@ library('tidylog')
 library('data.table')
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-ano <- '2019'
+ano <- '2016'
 
 # Pastas de arquivos
-pasta_origem   <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares6'
+# pasta_origem   <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares6'
+pasta_origem  <- '/media/livre/Expansion/Radar/PROCREV'
 pasta_volume  <- sprintf('%s/02_VOLUME', pasta_origem)
 pasta_graficos <- sprintf('%s/04_VOLGRA/VOL_%s', pasta_origem, ano)
 dir.create(pasta_graficos, recursive = TRUE, showWarnings = TRUE)
@@ -56,6 +57,45 @@ volumes_out <-
   full_join(volumes_L2, by = 'data') %>%
   full_join(volumes_L3, by = 'data') %>%
   full_join(volumes_L4, by = 'data')
+
+
+# Alguns códigos de local estão vindo repetidos de lotes diferentes, provavelmente
+# por erros nos registros. Exemplos são cod_local 0001, 0002 e 2443
+cods_repetidos <- data.frame(cod_local = names(volumes_out)) %>% filter(str_detect(cod_local, 'x'))
+cods_repetidos
+
+# Para cada um desses códigos, descartar coluna com menos ocorrências
+if (nrow(cods_repetidos) > 0) {
+  for (cod in cods_repetidos$cod_local) {
+    # cod <- cods_repetidos$cod_local[1]
+
+    # cod é o código com o x depois: 2443.x
+    print(cod)
+    # Substituir o x por y: 2443.y
+    cod2 <- str_replace(cod, 'x', 'y')
+
+    # Comparar quantas vezes aquele código aparece em cada coluna
+    comparativo1 <- volumes_out %>% select(all_of(cod))  %>% distinct() %>% nrow()
+    comparativo2 <- volumes_out %>% select(all_of(cod2)) %>% distinct() %>% nrow()
+
+    # Descartar coluna com menos ocorrência
+    if (comparativo1 > comparativo2) {
+      volumes_out <- volumes_out %>% select(-cod2)
+
+    } else if (comparativo2 > comparativo1) {
+      volumes_out <- volumes_out %>% select(-cod)
+
+    } else {
+      # Se as duas colunas têm a mesma quantidade, ambas são um erro, tanto faz
+      volumes_out <- volumes_out %>% select(-cod)
+
+    }
+
+  }
+
+  # Renomear coluna que fica para cod_local sem .x ou .y
+  names(volumes_out) <- str_replace(names(volumes_out), '.[xy]', '')
+}
 
 
 # Gravar resultados

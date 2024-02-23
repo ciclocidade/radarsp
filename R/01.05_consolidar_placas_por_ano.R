@@ -1,6 +1,7 @@
+# Requer todos os arquivos anuais por grupo de placas criados nos scripts anteriores
+
 # Agrupa a quantidade de registros de classificações de veículos por placa,
-# considerando um ano todo e todos os lotes. Requer todos os arquivos anuais
-# por grupo de placas criados nos scripts anteriores
+# considerando um ano todo e todos os lotes.
 
 library('tidyverse')
 library('tidylog')
@@ -9,10 +10,12 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por ano
-ano  <- '2018'
+ano  <- '2016'
 
 # Pastas de arquivos
-pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
+# pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
+# pasta_placas   <- sprintf('%s/03_PLACAS', pasta_origem)
+pasta_origem  <- '/media/livre/Expansion/Radar/PROCREV'
 pasta_placas   <- sprintf('%s/03_PLACAS', pasta_origem)
 pasta_placas_final <- sprintf('%s/PLC_%s', pasta_placas, ano)
 dir.create(pasta_placas_final,  recursive = TRUE, showWarnings = TRUE)
@@ -38,7 +41,7 @@ agrupar_registros <- function(df_placas) {
 
 
 # ------------------------------------------------------------------------------
-# Agrupar as bases de placas de todos os lotes, a partir dos grupos de placas
+# 1. Agrupar as bases de placas de todos os lotes, a partir dos grupos de placas
 # ------------------------------------------------------------------------------
 
 # Puxar lista inicial com todos os arquivos, para, dali, extrair os grupos de
@@ -107,7 +110,7 @@ for (sigla_grupo in grupos$conj_letras) {
 
 
 # ------------------------------------------------------------------------------
-# Calcular classificação predominante dos veículos
+# 2. Calcular classificação predominante dos veículos
 # ------------------------------------------------------------------------------
 
 # Puxar lista inicial com todos os arquivos, para, dali, extrair os grupos de
@@ -211,7 +214,7 @@ for (sigla_grupo in grupos$conj_letras) {
 
 
 # ------------------------------------------------------------------------------
-# Distribuição total de veículos por passagem em radares
+# 3. Distribuição total de veículos por passagem em radares
 # ------------------------------------------------------------------------------
 
 open_file <- sprintf('%s/PLC_%s_00_dist_tmp.csv', pasta_placas_final, ano)

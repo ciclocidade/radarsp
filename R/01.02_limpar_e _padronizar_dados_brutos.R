@@ -1,8 +1,14 @@
 library('tidyverse')
 # library('tidylog')
 
+# Instância paralela: se script estiver sendo rodado em mais de uma instância
+# do R ao mesmo tempo, alterar este número - é ele quem define o nome do
+# arquivo temporário de descartes de linhas com muitos caracteres
+inst_paralela <- 1; revisao <- TRUE
+
+
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L2_2018'
+lote_ano  <- 'L2_2020'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 # Pastas de arquivos
@@ -11,9 +17,9 @@ pasta_origem <- '/media/livre/SSD120GB/tmp_radares2'
 pasta_destino  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
 pasta_logreg  <- sprintf('%s/00_LOGREG', pasta_destino, lote_ano2)
 pasta_procrev <- sprintf('%s/01_PRCREV/REV_%s', pasta_destino, lote_ano2)
-pasta_descart <- sprintf('%s/01_PRCREV/DSC_%s', pasta_destino, lote_ano2)
+pasta_descart <- sprintf('%s/01_PRCREV/DSC/DSC_%s', pasta_destino, lote_ano2)
 pasta_volume  <- sprintf('%s/02_VOLUME/VOL_%s', pasta_destino, lote_ano2)
-pasta_placas  <- sprintf('%s/03_PLACAS/PLC_%s', pasta_destino, lote_ano2)
+pasta_placas  <- sprintf('%s/03_PLACAS/TMP/PLC_%s', pasta_destino, lote_ano2)
 # pasta_analise <- sprintf('%s/04_VELMED/VM_%s_TXT', pasta_destino, lote_ano2)
 dir.create(pasta_logreg,  recursive = TRUE, showWarnings = TRUE)
 dir.create(pasta_procrev, recursive = TRUE, showWarnings = TRUE)
@@ -28,13 +34,15 @@ out_log_file <- sprintf('%s/LOG_%s.csv', pasta_logreg, lote_ano)
 # Listar arquivos a serem processados
 f_pattern <- '^L[1-4]_20[0-9]{6}.txt'
 arquivos_radares <-
-  list.files(pasta_origem, pattern = f_pattern, recursive = TRUE, full.names = TRUE) %>%
+  list.files(pasta_origem, pattern = f_pattern, recursive = FALSE, full.names = TRUE) %>%
   as.data.frame() %>%
   setNames('arqs')
 
 # Filtrar segmento de interesse (por lote) para processamento em paralelo
 arquivos_radares <- arquivos_radares %>% filter(str_detect(arqs, lote_ano))
-# arquivos_radares <- arquivos_radares %>% arrange(desc(arqs))
+
+# Se o script estiver sendo rodado em uma segunda instância do R, inverter ordem
+if (inst_paralela == 2) { arquivos_radares <- arquivos_radares %>% arrange(desc(arqs)) }
 # tail(arquivos_radares)
 
 # Limpar ambiente
@@ -42,7 +50,7 @@ rm(lote_ano, lote_ano2, f_pattern)
 
 
 for (arq in arquivos_radares$arqs) {
-  # arq <- arquivos_radares %>% slice(1) %>% pull()
+  # arq <- arquivos_radares %>% slice(73) %>% pull()
   # arq <- arquivos_radares %>% sample_n(1) %>% pull()
 
   # Registrar nome do arquivo
@@ -180,8 +188,18 @@ for (arq in arquivos_radares$arqs) {
   # L1 20210915 053214 6965 3 00008577 0 EBG5042 1 0 042 072 00548 000 # 53 caracteres (8 números de registro)
   # L      data   hora  loc fx   n_reg tp  placa tiv com vel tocup  vm
 
-  # ... fazer alteração para os dois casos detectados
-  dados <- dados %>% mutate(X1 = str_replace(X1, ".?.?(L[1234][0-9]{19})([A-Z]{3})?([0-9]{8}[A-Z0-9 ]{7}[0-9 ]{16})", "\\1\\3"))
+  # Caso com espaço extra antes de entrar no número de registro (e registro
+  # começando com E00, sugerindo radar de entrefaixa, mas só aconteceu no
+  # L1 e primeiros meses de 2017 - já ajustando para rodar os outros lotes)
+  # L1201701191808006960 5E00000032       1000000000000000
+  # L1201701191844006960 5E00004770FKO08541006512203450000
+
+  # boo <- data.frame(X1 = 'L1201701191844006960 5E00004770FKO08541006512203450000')
+  # boo %>% mutate(X1 = str_replace(X1, ".?.?(L[1234][0-9]{18}) ?([0-9])([A-Z]{3})?([A-Z0-9][0-9]{7}[A-Z0-9 ]{7}[0-9 ]{16})", "\\1\\2\\4"))
+
+  # ... fazer alteração para os três casos detectados
+  # dados <- dados %>% mutate(X1 = str_replace(X1, ".?.?(L[1234][0-9]{19})([A-Z]{3})?([0-9]{8}[A-Z0-9 ]{7}[0-9 ]{16})", "\\1\\3"))
+  dados <- dados %>% mutate(X1 = str_replace(X1, ".?.?(L[1234][0-9]{18}) ?([0-9])([A-Z]{3})?([A-Z0-9][0-9]{7}[A-Z0-9 ]{7}[0-9 ]{16})", "\\1\\2\\4"))
 
 
   # Qual a extensão das strings mais presente na base (qual a moda)?
@@ -209,11 +227,13 @@ for (arq in arquivos_radares$arqs) {
 
 
   # Gravar linhas grandes em arquivo de texto temporário para tratamento no gsub
-  out_file <- sprintf('%s/tmp_linhas_extensas.txt', pasta_destino)
+  out_file <- sprintf('%s/tmp_linhas_extensas_v%i.txt', pasta_destino, inst_paralela)
   write_delim(dados_tmp, out_file, delim = ';')
 
   # Ler arquivo de texto como string e inserir quebras de parágrafo com REGEX via gsub
   file_str <- paste(readLines(out_file), collapse = '\n')
+
+
   # Reconhecer strings com 53 caracteres
   file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
   # Reconhecer strings com 52 caracteres - isso vai quebrar o zero final das
@@ -221,6 +241,42 @@ for (arq in arquivos_radares$arqs) {
   file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
   # Colar os zeros que ficaram isolados nas linhas às strings da linha anterior
   file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})\n0\n', '\\10\n', file_str, perl = TRUE)
+  # Remover quebras de espaço duplas
+  file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
+
+  # Alguns arquivos de descarte ficam enormes, podendo ter com várias linhas de
+  # registros reais. Como as substituições por gsub demoram para serem feitas
+  # em arquivos grandes, arquivos com mais de 2 MB devem ser checados
+  # manualmente - se precisarem que rode de novo, apagar entrada do log_file
+  # e marcar revisao <- TRUE no começo do script
+  if (file.info(out_file)$size <= 2000000 | revisao == TRUE) {
+    # Quebrar string tipo a abaixo, em que uma marcação do caractere 30, referente
+    # à passagem ou não de veículos é 2 (sem passagem de veículos) e está seguida
+    # pelo começo de um novo registro
+    # L42016022523244025791000275482L4201602252324542579100
+    # 0274470EFW05072113310601312000L42016022521283925791000274480GBG72702123010002289000
+    file_str <- gsub('(L[1234]([0-9]){27}2)(L[1234]([0-9]){21})', '\\1\n\\3', file_str, perl = TRUE)
+    # Separada a parte de cima, precisamos separar a parte de baixo
+    # L42016022521281025791000274462
+    # L4201602252128182579100
+    # 0274470EFW05072113310601312000L42016022521283925791000274480GBG72702123010002289000
+    file_str <- gsub('(([0-9]){7}([A-Z0-9 ]){7}([0-9 ]){16})(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n\\5', file_str, perl = TRUE)
+    # E, finalmente, juntar as linhas que são um outro registro
+    # L42016022521281025791000274462
+    # L4201602252128182579100
+    # 0274470EFW05072113310601312000
+    file_str <- gsub('(L[1234]([0-9]){21})\n(([0-9]){7}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\\3', file_str, perl = TRUE)
+  }
+
+  # Remover aspas duplas do arquivo, para que não sejam confundidas com
+  # demarcação de começo/final do texto (o read_delim vai ler tudo que estiver
+  # entre aspas duplas como sendo uma coluna só, ignorando, por exemplo o \n)
+  file_str <- gsub('\\"', '', file_str, perl = TRUE)
+
+
+  # Para finalizar, desgarrar strings de 53 caracteres que correspodem ao padrão
+  # de demais textos, inserindo uma quebra de parágrafo antes delas
+  file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\n\\1\n', file_str, perl = TRUE)
   # Remover quebras de espaço duplas
   file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
 
@@ -523,6 +579,8 @@ for (arq in arquivos_radares$arqs) {
   # ----------------------------------------------------------------------------
   # Validação via colunas de tipo_reg, tipo_veic e class_veic
   # ----------------------------------------------------------------------------
+
+  # TODO - Incluir linhas descartadas aqui no arquivo de descarte?
 
   # Separar bases com 30 e 53 caracteres
   dados_30char <- dados %>% filter(nchar(X1) == 30)

@@ -7,14 +7,14 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L2_2018'
+lote_ano  <- 'L2_2020'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 
 # Pastas de arquivos
 pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
-pasta_plc_mes <- sprintf('%s/03_PLACAS/PLC_MES_%s', pasta_origem, lote_ano2)
-pasta_plc_ano   <- sprintf('%s/03_PLACAS/PLC_ANO_%s', pasta_origem, lote_ano2)
+pasta_plc_mes <- sprintf('%s/03_PLACAS/TMP/PLC_MES_%s', pasta_origem, lote_ano2)
+pasta_plc_ano <- sprintf('%s/03_PLACAS/TMP/PLC_ANO_%s', pasta_origem, lote_ano2)
 dir.create(pasta_plc_ano,  recursive = TRUE, showWarnings = TRUE)
 
 
@@ -89,7 +89,7 @@ gravar_arquivo <- function(out_arq, df) {
 
 
 # ------------------------------------------------------------------------------
-# Agrupar arquivos temporários por grupo e trimestre, para caber na memória
+# 1. Agrupar arquivos temporários por grupo e trimestre, para caber na memória
 # ------------------------------------------------------------------------------
 
 # Criar padrões para grupos de arquivos temporários
@@ -175,7 +175,7 @@ rm(pattern, patterns,
 
 
 # ------------------------------------------------------------------------------
-# Consolidar agrupamento de placas por grupo de letras
+# 2. Consolidar agrupamento de placas por grupo de letras
 # ------------------------------------------------------------------------------
 
 
@@ -206,4 +206,5 @@ for (arq in arquivos_placas$arqs) {
   gc(T)
 
 }
+
 

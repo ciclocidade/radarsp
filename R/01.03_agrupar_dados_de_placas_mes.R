@@ -7,14 +7,14 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L2_2018'
+lote_ano  <- 'L2_2020'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 
 # Pastas de arquivos
 pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
-pasta_placas  <- sprintf('%s/03_PLACAS/PLC_%s', pasta_origem, lote_ano2)
-pasta_plc_mes <- sprintf('%s/03_PLACAS/PLC_MES_%s', pasta_origem, lote_ano2)
+pasta_placas  <- sprintf('%s/03_PLACAS/TMP/PLC_%s', pasta_origem, lote_ano2)
+pasta_plc_mes <- sprintf('%s/03_PLACAS/TMP/PLC_MES_%s', pasta_origem, lote_ano2)
 dir.create(pasta_plc_mes,  recursive = TRUE, showWarnings = TRUE)
 
 
