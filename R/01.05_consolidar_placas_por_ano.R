@@ -10,7 +10,7 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por ano
-ano  <- '2016'
+ano  <- '2020'
 
 # Pastas de arquivos
 # pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'

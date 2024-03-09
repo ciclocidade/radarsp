@@ -3,7 +3,7 @@ library('tidylog')
 library('data.table')
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-ano <- '2016'
+ano <- '2020'
 
 # Pastas de arquivos
 # pasta_origem   <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares6'
@@ -188,9 +188,13 @@ write_delim(resumo_locais, out_file2, delim = ';')
 # Criar gráficos para cada local
 # ------------------------------------------------------------------------------
 
+# Remover colunas em que os códigos aparecem mas são somente NA
+# https://stackoverflow.com/questions/15968494/how-to-delete-columns-that-contain-only-nas
+volumes_out <- volumes_out %>% select(where(~!all(is.na(.x))))
 
 # Selecionar todos os locais a partir dos nomes das colunas
 locais <- volumes_out %>% select(-data) %>% names()
+
 
 # Gerar um gráfico de volume registrado por dia para cada local
 for (local in locais) {

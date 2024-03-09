@@ -1,21 +1,25 @@
+# # Limpar memória da sessão do RStudio, com as variáveis
+# rm(list = ls())
+# .rs.restartR()
+# detach("package:tidylog")
+
 library('tidyverse')
 # library('tidylog')
 
 # Instância paralela: se script estiver sendo rodado em mais de uma instância
 # do R ao mesmo tempo, alterar este número - é ele quem define o nome do
 # arquivo temporário de descartes de linhas com muitos caracteres
-inst_paralela <- 1; revisao <- TRUE
-
+inst_paralela <- 1
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L2_2020'
+lote_ano  <- 'L4_2021'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 # Pastas de arquivos
 pasta_origem <- '/media/livre/SSD120GB/tmp_radares2'
 # pasta_origem <- '/media/livre/SSD120GB/tmp_radares2'
 pasta_destino  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'
-pasta_logreg  <- sprintf('%s/00_LOGREG', pasta_destino, lote_ano2)
+pasta_logreg  <- sprintf('%s/00_LOGREG', pasta_destino)
 pasta_procrev <- sprintf('%s/01_PRCREV/REV_%s', pasta_destino, lote_ano2)
 pasta_descart <- sprintf('%s/01_PRCREV/DSC/DSC_%s', pasta_destino, lote_ano2)
 pasta_volume  <- sprintf('%s/02_VOLUME/VOL_%s', pasta_destino, lote_ano2)
@@ -46,11 +50,11 @@ if (inst_paralela == 2) { arquivos_radares <- arquivos_radares %>% arrange(desc(
 # tail(arquivos_radares)
 
 # Limpar ambiente
-rm(lote_ano, lote_ano2, f_pattern)
+rm(lote_ano2, f_pattern)
 
 
 for (arq in arquivos_radares$arqs) {
-  # arq <- arquivos_radares %>% slice(73) %>% pull()
+  # arq <- arquivos_radares %>% slice(128) %>% pull()
   # arq <- arquivos_radares %>% sample_n(1) %>% pull()
 
   # Registrar nome do arquivo
@@ -225,31 +229,127 @@ for (arq in arquivos_radares$arqs) {
   dados <- dados %>% filter(nchar(X1) <= mode)
   # head(dados_tmp)
 
-
   # Gravar linhas grandes em arquivo de texto temporário para tratamento no gsub
   out_file <- sprintf('%s/tmp_linhas_extensas_v%i.txt', pasta_destino, inst_paralela)
   write_delim(dados_tmp, out_file, delim = ';')
 
-  # Ler arquivo de texto como string e inserir quebras de parágrafo com REGEX via gsub
-  file_str <- paste(readLines(out_file), collapse = '\n')
 
-
-  # Reconhecer strings com 53 caracteres
-  file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
-  # Reconhecer strings com 52 caracteres - isso vai quebrar o zero final das
-  # strings acima, deixando linhas com parágrafo-0-parágrafo
-  file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
-  # Colar os zeros que ficaram isolados nas linhas às strings da linha anterior
-  file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})\n0\n', '\\10\n', file_str, perl = TRUE)
-  # Remover quebras de espaço duplas
-  file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
 
   # Alguns arquivos de descarte ficam enormes, podendo ter com várias linhas de
   # registros reais. Como as substituições por gsub demoram para serem feitas
-  # em arquivos grandes, arquivos com mais de 2 MB devem ser checados
-  # manualmente - se precisarem que rode de novo, apagar entrada do log_file
-  # e marcar revisao <- TRUE no começo do script
-  if (file.info(out_file)$size <= 2000000 | revisao == TRUE) {
+  # em arquivos grandes, arquivos com mais de 30 MB terão suas linhas quebradas
+  # com o sed. Isso porque muitos deles contém uma única linha gigantesca com
+  # todos os registros concatenados, sem quebra de parágrafo entre eles
+  if (file.info(out_file)$size > 30000000) {
+
+    # Definir um novo arquivo de saída
+    out_file_tmp <- sprintf('%s/tmp_linhas_extensas_v%i_tmp.txt', pasta_destino, inst_paralela)
+
+    # Inserir quebras de linha no arquivo, a partir da sigla do lote
+    # cat arquivo_com_linhas_extensas.txt | sed -e 's/L4/\nL4/g' > arquivo_saida.txt
+    cat_path <- sprintf("/bin/cat")
+    sed_path <- sprintf("/bin/sed")
+    lote <- str_sub(lote_ano, 1, 2)
+    cat_args <- sprintf('"%s" | %s -e \'s/%s/\\n%s/g\' > "%s"', out_file, sed_path, lote, lote, out_file_tmp)
+    system2(command = cat_path, args = c(cat_args))
+
+    # Limpar ambiente
+    rm(cat_path, sed_path, lote, cat_args)
+
+    # Ler arquivo de texto como string, reconhecendo quebras de parágrafo
+    file_str <- readLines(out_file_tmp)
+
+    # Padrões de saída para 53 e 30 caracteres (com e sem registros de veículos)
+    output_pattern1 <- '(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})'
+    output_pattern2 <- '(L[1234]([0-9]){27}2)'
+
+    # Separar arquivos que já estão no padrão dos que não estão
+    out_file_tmp_ok <- sprintf('%s/tmp_linhas_extensas_v%i_tmp_OK.txt', pasta_destino, inst_paralela)
+    out_file_tmp_nao_ok <- sprintf('%s/tmp_linhas_extensas_v%i_tmp_NOK.txt', pasta_destino, inst_paralela)
+
+    for (line in file_str) {
+
+      # Se arquivo tem 53 caracteres e está no padrão esperado, salvar como OK
+      if (nchar(line) == 53 & str_detect(line, output_pattern1)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Se arquivo tem 30 caracteres e está no padrão esperado, salvar como OK
+      } else if (nchar(line) == 30 & str_detect(line, output_pattern2)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Do contrário, salvar em arquivo de não OK para tratamento
+      } else {
+        cat(line, sep = '\n', file = out_file_tmp_nao_ok, append = TRUE)
+      }
+
+    }
+
+    # Com alguma esperança, as linhas com erro são bem menores do que as sem
+    # erro. A primeira coisa a fazer é ler o arquivo dos erros e juntar as linhas
+    # que haviam sido separadas no lote mas que o L1, L2, L3 ou L4 podem ser uma
+    # parte da placa, logo apṕos as 2 primeiras letras. Exemplo:
+    # L42021070613392225392001293390LI
+    # L47821003709400456000
+    file_str <- paste(readLines(out_file_tmp_nao_ok), collapse = '\n')
+
+    # Juntar registros cuja sigla do lote fazia parte da placa
+    file_str <- gsub('(L[1234]([0-9]){28}([A-Z]){2})\n(L[1234]([0-9]){3}([0-9 ]){16})', '\\1\\4', file_str, perl = TRUE)
+
+    # Sobrescrever arquivo de 'não OK'
+    cat(file_str, file = out_file_tmp_nao_ok)
+
+    # Refazer filtro anterior: se linha do arquivo está no padrão de 53
+    # caracteres, juntá-la ao arquivo de OK
+    # Ler arquivo de texto como string, reconhecendo quebras de parágrafo
+    file_str <- readLines(out_file_tmp_nao_ok)
+    file.remove(out_file_tmp_nao_ok)
+
+    for (line in file_str) {
+
+      # Se arquivo tem 53 caracteres e está no padrão esperado, salvar como OK
+      if (nchar(line) == 53 & str_detect(line, output_pattern1)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Do contrário, salvar de volta em arquivo de não OK
+      } else {
+        cat(line, sep = '\n', file = out_file_tmp_nao_ok, append = TRUE)
+      }
+
+    }
+
+    # Ler arquivo temporário das linhas que estão OK, agora como dataframe
+    dados_tmp <- read_delim(out_file_tmp_ok, delim = ';', col_types = cols(.default = "c"), col_names = FALSE)
+    # head(dados_tmp)
+
+    # Ler arquivo temporário das linhas que não estão OK como dataframe
+    dados_tmp2 <- read_delim(out_file_tmp_nao_ok, delim = ';', col_types = cols(.default = "c"), col_names = FALSE)
+    # head(dados_tmp2)
+
+    # Remover arquivos temporários
+    file.remove(out_file, out_file_tmp, out_file_tmp_ok, out_file_tmp_nao_ok)
+    # Limpar ambiente
+    rm(output_pattern1, output_pattern2, line, out_file,
+       out_file_tmp, out_file_tmp_ok, out_file_tmp_nao_ok)
+
+
+  } else {
+    # Se arquivo for menor do que 30MB, ler direto como string e inserir quebras de parágrafo com REGEX via gsub
+    file_str <- paste(readLines(out_file), collapse = '\n')
+
+    # Reconhecer strings com 53 caracteres
+    file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
+    # Reconhecer strings com 52 caracteres - isso vai quebrar o zero final das
+    # strings acima, deixando linhas com parágrafo-0-parágrafo
+    file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\n', file_str, perl = TRUE)
+    # Colar os zeros que ficaram isolados nas linhas às strings da linha anterior
+    file_str <- gsub('(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})\n0\n', '\\10\n', file_str, perl = TRUE)
+    # Remover quebras de espaço duplas
+    file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
+
+
     # Quebrar string tipo a abaixo, em que uma marcação do caractere 30, referente
     # à passagem ou não de veículos é 2 (sem passagem de veículos) e está seguida
     # pelo começo de um novo registro
@@ -266,35 +366,36 @@ for (arq in arquivos_radares$arqs) {
     # L4201602252128182579100
     # 0274470EFW05072113310601312000
     file_str <- gsub('(L[1234]([0-9]){21})\n(([0-9]){7}([A-Z0-9 ]){7}([0-9 ]){16})', '\\1\\3', file_str, perl = TRUE)
+
+    # Remover aspas duplas do arquivo, para que não sejam confundidas com
+    # demarcação de começo/final do texto (o read_delim vai ler tudo que estiver
+    # entre aspas duplas como sendo uma coluna só, ignorando, por exemplo o \n)
+    file_str <- gsub('\\"', '', file_str, perl = TRUE)
+
+
+    # Para finalizar, desgarrar strings de 53 caracteres que correspodem ao padrão
+    # de demais textos, inserindo uma quebra de parágrafo antes delas
+    file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\n\\1\n', file_str, perl = TRUE)
+    # Remover quebras de espaço duplas
+    file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
+
+    # Gravar resultados em arquivo temporário, substituindo o anterior
+    cat(file_str, file = out_file)
+
+    # Ler arquivo temporário, agora como dataframe
+    dados_tmp <- read_delim(out_file, delim = ';', col_types = cols(.default = "c"))
+    # head(dados_tmp)
+
+    # Remover arquivo temporário
+    file.remove(out_file)
+
+    # Todas as linhas com string igual o menor que mode serão juntadas ao dataframe
+    # principal (dados)
+    dados_tmp2 <- dados_tmp %>% filter(nchar(X1) > mode)
+    dados_tmp  <- dados_tmp %>% filter(nchar(X1) <= mode)
+
   }
 
-  # Remover aspas duplas do arquivo, para que não sejam confundidas com
-  # demarcação de começo/final do texto (o read_delim vai ler tudo que estiver
-  # entre aspas duplas como sendo uma coluna só, ignorando, por exemplo o \n)
-  file_str <- gsub('\\"', '', file_str, perl = TRUE)
-
-
-  # Para finalizar, desgarrar strings de 53 caracteres que correspodem ao padrão
-  # de demais textos, inserindo uma quebra de parágrafo antes delas
-  file_str <- gsub('(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})', '\n\\1\n', file_str, perl = TRUE)
-  # Remover quebras de espaço duplas
-  file_str <- gsub('\n+', '\n', file_str, perl = TRUE)
-
-  # Gravar resultados em arquivo temporário, substituindo o anterior
-  cat(file_str, file = out_file)
-
-
-  # Ler arquivo temporário, agora como dataframe
-  dados_tmp <- read_delim(out_file, delim = ';', col_types = cols(.default = "c"))
-  # head(dados_tmp)
-
-  # Remover arquivo temporário
-  file.remove(out_file)
-
-  # Todas as linhas com string igual o menor que mode serão juntadas ao dataframe
-  # principal (dados)
-  dados_tmp2 <- dados_tmp %>% filter(nchar(X1) > mode)
-  dados_tmp  <- dados_tmp %>% filter(nchar(X1) <= mode)
 
   # Juntar dados de dados_tmp ao dataframe principal dados
   dados <- rbind(dados, dados_tmp)
@@ -783,22 +884,22 @@ for (arq in arquivos_radares$arqs) {
     # rename(moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`) %>%
     select(placa, moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`)
 
-    # # Contar quantas colunas possuem zero em cada linha - considerar somente colunas numéricas
-    # # https://stackoverflow.com/questions/11797216/count-number-of-zeros-per-row-and-remove-rows-with-more-than-n-zeros
-    # # DF[rowSums(DF == 0)]
-    # mutate(class_unic = rowSums(across(where(is.numeric)) != 0)) %>%
+  # # Contar quantas colunas possuem zero em cada linha - considerar somente colunas numéricas
+  # # https://stackoverflow.com/questions/11797216/count-number-of-zeros-per-row-and-remove-rows-with-more-than-n-zeros
+  # # DF[rowSums(DF == 0)]
+  # mutate(class_unic = rowSums(across(where(is.numeric)) != 0)) %>%
 
-    # # Calcular acurácia da classificação - para cada linha, somar a quantidade
-    # # de ocorrências e calcular a proporção do valor que mais aparece
-    # rowwise() %>%
-    # mutate(n_ocurr = moto + passeio + onibus + caminhao,
-    #        acuracia = round(max(moto, passeio, onibus, caminhao) / n_ocurr * 100, 2)) %>%
-    #
-    # # Remover o rowwise
-    # ungroup() %>%
-    #
-    # # Reordenar colunas
-    # select(placa, moto, passeio, onibus, caminhao, n_ocurr, class_unic, class_pred, acuracia)
+  # # Calcular acurácia da classificação - para cada linha, somar a quantidade
+  # # de ocorrências e calcular a proporção do valor que mais aparece
+  # rowwise() %>%
+  # mutate(n_ocurr = moto + passeio + onibus + caminhao,
+  #        acuracia = round(max(moto, passeio, onibus, caminhao) / n_ocurr * 100, 2)) %>%
+  #
+  # # Remover o rowwise
+  # ungroup() %>%
+  #
+  # # Reordenar colunas
+  # select(placa, moto, passeio, onibus, caminhao, n_ocurr, class_unic, class_pred, acuracia)
 
   # sample_n(placas, 20)
 
@@ -847,7 +948,7 @@ for (arq in arquivos_radares$arqs) {
     write_delim(log, out_log_file, delim = ';', append = TRUE)
   } else {
     write_delim(log, out_log_file, delim = ';', append = FALSE)
-    }
+  }
 
 
 

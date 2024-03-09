@@ -1,13 +1,17 @@
 # Agrupa a quantidade de registros de classificações de veículos por placa mês
 # a mês. Requer todos os arquivos diários criados no script anterior
 
+# # Limpar memória da sessão do RStudio, com as variáveis
+# rm(list = ls())
+# .rs.restartR()
+
 library('tidyverse')
 library('tidylog')
 library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L2_2020'
+lote_ano  <- 'L3_2021'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 
@@ -101,6 +105,8 @@ for (mes in sprintf('%02d', 1:12)) {
   gc(T)
 
 }
+
+
 
 
 # placas <-

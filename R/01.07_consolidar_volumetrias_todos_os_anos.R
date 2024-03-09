@@ -22,7 +22,7 @@ arquivos_volumes <-
 
 
 # TODO: Atualizar aqui
-ano_inicial <- '2016'; ano_final <- '2019'
+ano_inicial <- '2016'; ano_final <- '2020'
 
 # Abrir todos os dados de volume por ano
 # TODO: Atualizar aqui
@@ -30,6 +30,7 @@ vol2016 <- read_delim(arquivos_volumes[[1]][1], delim = ';', col_types = cols(.d
 vol2017 <- read_delim(arquivos_volumes[[1]][2], delim = ';', col_types = cols(.default = "i"))
 vol2018 <- read_delim(arquivos_volumes[[1]][3], delim = ';', col_types = cols(.default = "i"))
 vol2019 <- read_delim(arquivos_volumes[[1]][4], delim = ';', col_types = cols(.default = "i"))
+vol2020 <- read_delim(arquivos_volumes[[1]][5], delim = ';', col_types = cols(.default = "i"))
 
 # Delimitar somente datas referentes ao ano de interesse - isso vai derrubar algumas
 # poucas linhas de erro e de dias limites aos anos anterior/posterior
@@ -37,6 +38,7 @@ vol2016 <- vol2016 %>% mutate(data = as.character(data)) %>% filter(str_starts(d
 vol2017 <- vol2017 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2017'))
 vol2018 <- vol2018 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2018'))
 vol2019 <- vol2019 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2019'))
+vol2020 <- vol2020 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2020'))
 
 # Todos os códigos de local presentes nas bases de todos os anos
 # TODO: Atualizar aqui
@@ -44,11 +46,12 @@ cods2016 <- data.frame(cod_local = names(vol2016))
 cods2017 <- data.frame(cod_local = names(vol2017))
 cods2018 <- data.frame(cod_local = names(vol2018))
 cods2019 <- data.frame(cod_local = names(vol2019))
+cods2020 <- data.frame(cod_local = names(vol2020))
 
 # Criar um dataframe com todas as entradas únicas de cod_local
 # TODO: Atualizar aqui
 all_cods <-
-  rbind(cods2016, cods2017, cods2018, cods2019) %>%
+  rbind(cods2016, cods2017, cods2018, cods2019, cods2020) %>%
   distinct() %>%
   filter(cod_local != 'data') %>%
   arrange(cod_local)
@@ -132,9 +135,15 @@ for (cod in all_cods$cod_local) {
     tmp_2019 <- create_dummy_df('2019', cod)
   }
 
+  if (cod %in% names(vol2020)) {
+    tmp_2020 <- vol2020 %>% select(data, all_of(cod))
+  } else {
+    tmp_2020 <- create_dummy_df('2020', cod)
+  }
+
   # Dataframe temporário são os dias de todos os anos e respectivos volumes
   # TODO: Atualizar aqui
-  tmp_all <- rbind(tmp_2016, tmp_2017, tmp_2018, tmp_2019)
+  tmp_all <- rbind(tmp_2016, tmp_2017, tmp_2018, tmp_2019, tmp_2020)
 
   # Gerar gráficos
   png(filename = sprintf('%s/VOL_%s.png', pasta_grf_hist, cod))
@@ -177,6 +186,7 @@ for (cod in all_cods$cod_local) {
 # Criar gráficos para volume total ao longo dos anos
 # ------------------------------------------------------------------------------
 
+# Soma todas as colunas numéricas
 calcular_totais <- function(df) {
   df %>%
     select(where(is.numeric)) %>%
@@ -205,9 +215,14 @@ datas2019 <- vol2019 %>% select(data)
 total2019 <- calcular_totais(vol2019)
 total2019 <- cbind(datas2019, total2019)
 
+# 2020
+datas2020 <- vol2020 %>% select(data)
+total2020 <- calcular_totais(vol2020)
+total2020 <- cbind(datas2020, total2020)
+
 
 # Juntar tudo
-totais <- rbind(total2016, total2017, total2018, total2019)
+totais <- rbind(total2016, total2017, total2018, total2019, total2020)
 # Deixar totais em milhões
 totais <- totais %>% mutate(vol_total = vol_total / 1000000)
 
