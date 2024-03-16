@@ -3,6 +3,10 @@
 # Agrupa a quantidade de registros de classificações de veículos por placa,
 # considerando um ano todo e todos os lotes.
 
+# Limpar memória da sessão do RStudio, com as variáveis
+# rm(list = ls())
+# .rs.restartR()
+
 library('tidyverse')
 library('tidylog')
 library('data.table')
@@ -10,7 +14,7 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por ano
-ano  <- '2020'
+ano  <- '2022'
 
 # Pastas de arquivos
 # pasta_origem  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares7'

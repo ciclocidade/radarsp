@@ -11,7 +11,7 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L3_2021'
+lote_ano  <- 'L4_2022'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 

@@ -23,7 +23,7 @@ arquivos_volumes <-
 
 
 # TODO: Atualizar aqui
-ano_inicial <- '2016'; ano_final <- '2020'
+ano_inicial <- '2016'; ano_final <- '2021'
 
 # Abrir todos os dados de volume por ano
 # TODO: Atualizar aqui
@@ -32,6 +32,7 @@ vol2017 <- read_delim(arquivos_volumes[[1]][2], delim = ';', col_types = cols(.d
 vol2018 <- read_delim(arquivos_volumes[[1]][3], delim = ';', col_types = cols(.default = "i"))
 vol2019 <- read_delim(arquivos_volumes[[1]][4], delim = ';', col_types = cols(.default = "i"))
 vol2020 <- read_delim(arquivos_volumes[[1]][5], delim = ';', col_types = cols(.default = "i"))
+vol2021 <- read_delim(arquivos_volumes[[1]][6], delim = ';', col_types = cols(.default = "i"))
 
 # Delimitar somente datas referentes ao ano de interesse - isso vai derrubar algumas
 # poucas linhas de erro e de dias limites aos anos anterior/posterior
@@ -40,6 +41,7 @@ vol2017 <- vol2017 %>% mutate(data = as.character(data)) %>% filter(str_starts(d
 vol2018 <- vol2018 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2018'))
 vol2019 <- vol2019 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2019'))
 vol2020 <- vol2020 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2020'))
+vol2021 <- vol2021 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2021'))
 
 
 
@@ -97,11 +99,13 @@ remover_colunas_duplicadas <- function(df) {
 }
 
 # Remover as colunas duplicadas
+# TODO: Atualizar aqui
 vol2016 <- remover_colunas_duplicadas(vol2016)
 vol2017 <- remover_colunas_duplicadas(vol2017)
 vol2018 <- remover_colunas_duplicadas(vol2018)
 vol2019 <- remover_colunas_duplicadas(vol2019)
 vol2020 <- remover_colunas_duplicadas(vol2020)
+vol2021 <- remover_colunas_duplicadas(vol2021)
 
 
 # ------------------------------------------------------------------------------
@@ -121,20 +125,24 @@ calcular_totais <- function(df) {
 # selecionada como linhas e (2) puxar os valores da coluna que estava
 # selecionada como as novas distribuições de colunas
 # https://community.rstudio.com/t/how-to-divide-rows-by-another-row/53265/5
+# TODO: Atualizar aqui
 vol2016 <- vol2016 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2017 <- vol2017 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2018 <- vol2018 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2019 <- vol2019 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2020 <- vol2020 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
-head(vol2020)
+vol2021 <- vol2021 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
+head(vol2021)
 
 # Juntar todos os volumes de todos os locais
+# TODO: Atualizar aqui
 all_vols <-
   vol2016 %>%
   full_join(vol2017, by = 'name') %>%
   full_join(vol2018, by = 'name') %>%
   full_join(vol2019, by = 'name') %>%
-  full_join(vol2020, by = 'name')
+  full_join(vol2020, by = 'name') %>%
+  full_join(vol2021, by = 'name')
 
 
 # Calcular soma dos volumes de todos os dias, por local

@@ -1,7 +1,7 @@
 # Agrupa a quantidade de registros de classificações de veículos por placa mês
 # a mês. Requer todos os arquivos diários criados no script anterior
 
-# # Limpar memória da sessão do RStudio, com as variáveis
+# Limpar memória da sessão do RStudio, com as variáveis
 # rm(list = ls())
 # .rs.restartR()
 
@@ -11,7 +11,7 @@ library('data.table')
 
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-lote_ano  <- 'L3_2021'
+lote_ano  <- 'L4_2022'
 lote_ano2 <- str_c(str_sub(lote_ano, 1, 2), str_sub(lote_ano, 4, 7))
 
 
@@ -93,7 +93,7 @@ gravar_arquivo <- function(out_arq, df) {
 
 
 # ------------------------------------------------------------------------------
-# 1. Agrupar arquivos temporários por grupo e trimestre, para caber na memória
+# Agrupar arquivos temporários por grupo e trimestre, para caber na memória
 # ------------------------------------------------------------------------------
 
 # Criar padrões para grupos de arquivos temporários

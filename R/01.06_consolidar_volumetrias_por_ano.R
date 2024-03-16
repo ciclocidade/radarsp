@@ -1,9 +1,13 @@
+# Limpar memória da sessão do RStudio, com as variáveis
+# rm(list = ls())
+# .rs.restartR()
+
 library('tidyverse')
 library('tidylog')
 library('data.table')
 
 # Variável principal - modificar cada vez que for rodar, por lote e ano
-ano <- '2020'
+ano <- '2022'
 
 # Pastas de arquivos
 # pasta_origem   <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dados/tmp_brutos_radares/tmp_radares6'
@@ -25,6 +29,7 @@ arquivos_volumes <-
 # ------------------------------------------------------------------------------
 
 agrupar_volumetrias <- function(df_arquivos, string_pattern) {
+  # df_arquivos <- arquivos_volumes; string_pattern <- sprintf('VOL_L4_%s', ano)
 
   # Filtrar segmento de interesse (por lote) para processamento em paralelo
   volumes <- df_arquivos %>% filter(str_detect(arqs, string_pattern))
@@ -38,6 +43,7 @@ agrupar_volumetrias <- function(df_arquivos, string_pattern) {
   # Agrupar resultados por dia e local
   volumes <-
     volumes %>%
+    filter(str_detect(local, '[0-9]{4}')) %>%
     group_by(data, local) %>%
     summarise(total = sum(n)) %>%
     ungroup() %>%
