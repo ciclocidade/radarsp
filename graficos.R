@@ -99,6 +99,19 @@ radar_6774 %>%
   labs(x = "Velocidade pontual média",
        y = "Volume total") 
 
+df_radares %>% 
+  ggplot(aes(x = as.numeric(vel_p))) +
+  geom_histogram() +
+  facet_wrap(~hora)
+
+vec_locais <- unique(df_radares$local)[1:12]
+
+df_radares %>% 
+  filter(local %in% vec_locais) %>% 
+  ggplot(aes(x = as.numeric(vel_p), fill = hora)) +
+  geom_histogram() +
+  facet_wrap(~local)
+
 
 
 #### ###################################################################### ####
