@@ -21,27 +21,34 @@ arquivos_volumes <-
   as.data.frame() %>%
   setNames('arqs')
 
+# Remover ano de 2014
+arquivos_volumes <- arquivos_volumes %>% filter(!str_detect(arqs, 'VOL_2014.csv'))
+
 
 # TODO: Atualizar aqui
-ano_inicial <- '2016'; ano_final <- '2021'
+ano_inicial <- '2015'; ano_final <- '2022'
 
 # Abrir todos os dados de volume por ano
 # TODO: Atualizar aqui
-vol2016 <- read_delim(arquivos_volumes[[1]][1], delim = ';', col_types = cols(.default = "i"))
-vol2017 <- read_delim(arquivos_volumes[[1]][2], delim = ';', col_types = cols(.default = "i"))
-vol2018 <- read_delim(arquivos_volumes[[1]][3], delim = ';', col_types = cols(.default = "i"))
-vol2019 <- read_delim(arquivos_volumes[[1]][4], delim = ';', col_types = cols(.default = "i"))
-vol2020 <- read_delim(arquivos_volumes[[1]][5], delim = ';', col_types = cols(.default = "i"))
-vol2021 <- read_delim(arquivos_volumes[[1]][6], delim = ';', col_types = cols(.default = "i"))
+vol2015 <- read_delim(arquivos_volumes[[1]][1], delim = ';', col_types = cols(.default = "i"))
+vol2016 <- read_delim(arquivos_volumes[[1]][2], delim = ';', col_types = cols(.default = "i"))
+vol2017 <- read_delim(arquivos_volumes[[1]][3], delim = ';', col_types = cols(.default = "i"))
+vol2018 <- read_delim(arquivos_volumes[[1]][4], delim = ';', col_types = cols(.default = "i"))
+vol2019 <- read_delim(arquivos_volumes[[1]][5], delim = ';', col_types = cols(.default = "i"))
+vol2020 <- read_delim(arquivos_volumes[[1]][6], delim = ';', col_types = cols(.default = "i"))
+vol2021 <- read_delim(arquivos_volumes[[1]][7], delim = ';', col_types = cols(.default = "i"))
+vol2022 <- read_delim(arquivos_volumes[[1]][8], delim = ';', col_types = cols(.default = "i"))
 
 # Delimitar somente datas referentes ao ano de interesse - isso vai derrubar algumas
 # poucas linhas de erro e de dias limites aos anos anterior/posterior
+vol2015 <- vol2015 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2015'))
 vol2016 <- vol2016 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2016'))
 vol2017 <- vol2017 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2017'))
 vol2018 <- vol2018 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2018'))
 vol2019 <- vol2019 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2019'))
 vol2020 <- vol2020 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2020'))
 vol2021 <- vol2021 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2021'))
+vol2022 <- vol2022 %>% mutate(data = as.character(data)) %>% filter(str_starts(data, '2022'))
 
 
 
@@ -100,12 +107,14 @@ remover_colunas_duplicadas <- function(df) {
 
 # Remover as colunas duplicadas
 # TODO: Atualizar aqui
+vol2015 <- remover_colunas_duplicadas(vol2015)
 vol2016 <- remover_colunas_duplicadas(vol2016)
 vol2017 <- remover_colunas_duplicadas(vol2017)
 vol2018 <- remover_colunas_duplicadas(vol2018)
 vol2019 <- remover_colunas_duplicadas(vol2019)
 vol2020 <- remover_colunas_duplicadas(vol2020)
 vol2021 <- remover_colunas_duplicadas(vol2021)
+vol2022 <- remover_colunas_duplicadas(vol2022)
 
 
 # ------------------------------------------------------------------------------
@@ -126,23 +135,27 @@ calcular_totais <- function(df) {
 # selecionada como as novas distribuições de colunas
 # https://community.rstudio.com/t/how-to-divide-rows-by-another-row/53265/5
 # TODO: Atualizar aqui
+vol2015 <- vol2015 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2016 <- vol2016 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2017 <- vol2017 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2018 <- vol2018 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2019 <- vol2019 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2020 <- vol2020 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
 vol2021 <- vol2021 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
-head(vol2021)
+vol2022 <- vol2022 %>% pivot_longer(-data) %>% pivot_wider(name, names_from = data)
+head(vol2022)
 
 # Juntar todos os volumes de todos os locais
 # TODO: Atualizar aqui
 all_vols <-
-  vol2016 %>%
+  vol2015 %>%
+  full_join(vol2016, by = 'name') %>%
   full_join(vol2017, by = 'name') %>%
   full_join(vol2018, by = 'name') %>%
   full_join(vol2019, by = 'name') %>%
   full_join(vol2020, by = 'name') %>%
-  full_join(vol2021, by = 'name')
+  full_join(vol2021, by = 'name') %>%
+  full_join(vol2022, by = 'name')
 
 
 # Calcular soma dos volumes de todos os dias, por local
@@ -184,7 +197,7 @@ grep_bin_path <- sprintf("/bin/grep")
 out_df <- data.frame()
 
 # Buscar estudos técnicos para todos os códigos
-for (cod in tot_gerais$cods) {
+for (cod in tot_gerais$cod) {
   # cod <- '6652' # tem resultado;
   # cod <- '6655' # vazio
   print(cod)

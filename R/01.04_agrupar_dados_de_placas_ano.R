@@ -114,61 +114,66 @@ for (pattern in patterns) {
   placas <- abrir_e_juntar_arquivos(pasta_plc_mes, pattern)
   # head(placas, 20)
 
-  # Separar placas em grupos de tamanhos similares para dividir o processamento
-  grupo1 <- placas %>% filter(str_starts(placa, '[A-B]'))
-  grupo2 <- placas %>% filter(str_starts(placa, '[C]'))
-  grupo3 <- placas %>% filter(str_starts(placa, '[D]'))
-  grupo4 <- placas %>% filter(str_starts(placa, '[E]'))
-  grupo5 <- placas %>% filter(str_starts(placa, '[F]'))
-  grupo6 <- placas %>% filter(str_starts(placa, '[G-H]'))
-  grupo7 <- placas %>% filter(str_starts(placa, '[I-J]'))
-  grupo8 <- placas %>% filter(str_starts(placa, '[K-N]'))
-  grupo9 <- placas %>% filter(str_starts(placa, '[O]'))
-  grupo10 <- placas %>% filter(str_starts(placa, '[P-R]'))
-  grupo11 <- placas %>% filter(str_starts(placa, '[S-U]'))
-  grupo12 <- placas %>% filter(str_starts(placa, '[V-Z]'))
+  if (nrow(placas) > 0) {
+    # Separar placas em grupos de tamanhos similares para dividir o processamento
+    grupo1 <- placas %>% filter(str_starts(placa, '[A-B]'))
+    grupo2 <- placas %>% filter(str_starts(placa, '[C]'))
+    grupo3 <- placas %>% filter(str_starts(placa, '[D]'))
+    grupo4 <- placas %>% filter(str_starts(placa, '[E]'))
+    grupo5 <- placas %>% filter(str_starts(placa, '[F]'))
+    grupo6 <- placas %>% filter(str_starts(placa, '[G-H]'))
+    grupo7 <- placas %>% filter(str_starts(placa, '[I-J]'))
+    grupo8 <- placas %>% filter(str_starts(placa, '[K-N]'))
+    grupo9 <- placas %>% filter(str_starts(placa, '[O]'))
+    grupo10 <- placas %>% filter(str_starts(placa, '[P-R]'))
+    grupo11 <- placas %>% filter(str_starts(placa, '[S-U]'))
+    grupo12 <- placas %>% filter(str_starts(placa, '[V-Z]'))
 
-  # Gravar resultados - ir juntando os trimestres em um único arquivo de saída
-  out_file1 <- sprintf('%s/PLC_%s_tmp_AB.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file1, grupo1)
+    # Gravar resultados - ir juntando os trimestres em um único arquivo de saída
+    out_file1 <- sprintf('%s/PLC_%s_tmp_AB.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file1, grupo1)
 
-  out_file2 <- sprintf('%s/PLC_%s_tmp_CC.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file2, grupo2)
+    out_file2 <- sprintf('%s/PLC_%s_tmp_CC.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file2, grupo2)
 
-  out_file3 <- sprintf('%s/PLC_%s_tmp_DD.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file3, grupo3)
+    out_file3 <- sprintf('%s/PLC_%s_tmp_DD.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file3, grupo3)
 
-  out_file4 <- sprintf('%s/PLC_%s_tmp_EE.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file4, grupo4)
+    out_file4 <- sprintf('%s/PLC_%s_tmp_EE.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file4, grupo4)
 
-  out_file5 <- sprintf('%s/PLC_%s_tmp_FF.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file5, grupo5)
+    out_file5 <- sprintf('%s/PLC_%s_tmp_FF.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file5, grupo5)
 
-  out_file6 <- sprintf('%s/PLC_%s_tmp_GH.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file6, grupo6)
+    out_file6 <- sprintf('%s/PLC_%s_tmp_GH.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file6, grupo6)
 
-  out_file7 <- sprintf('%s/PLC_%s_tmp_IJ.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file7, grupo7)
+    out_file7 <- sprintf('%s/PLC_%s_tmp_IJ.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file7, grupo7)
 
-  out_file8 <- sprintf('%s/PLC_%s_tmp_KN.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file8, grupo8)
+    out_file8 <- sprintf('%s/PLC_%s_tmp_KN.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file8, grupo8)
 
-  out_file9 <- sprintf('%s/PLC_%s_tmp_OO.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file9, grupo9)
+    out_file9 <- sprintf('%s/PLC_%s_tmp_OO.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file9, grupo9)
 
-  out_file10 <- sprintf('%s/PLC_%s_tmp_PR.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file10, grupo10)
+    out_file10 <- sprintf('%s/PLC_%s_tmp_PR.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file10, grupo10)
 
-  out_file11 <- sprintf('%s/PLC_%s_tmp_SU.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file11, grupo11)
+    out_file11 <- sprintf('%s/PLC_%s_tmp_SU.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file11, grupo11)
 
-  out_file12 <- sprintf('%s/PLC_%s_tmp_VZ.csv', pasta_plc_ano, lote_ano)
-  gravar_arquivo(out_file12, grupo12)
+    out_file12 <- sprintf('%s/PLC_%s_tmp_VZ.csv', pasta_plc_ano, lote_ano)
+    gravar_arquivo(out_file12, grupo12)
+
+    # Limpar ambiente
+    rm(grupo1, grupo2, grupo3, grupo4, grupo5, grupo6, grupo7, grupo8,
+       grupo9, grupo10, grupo11, grupo12)
+    gc(T)
+  }
 
   # Limpar ambiente
-  rm(placas, grupo1, grupo2, grupo3, grupo4, grupo5, grupo6, grupo7, grupo8,
-     grupo9, grupo10, grupo11, grupo12)
-  gc(T)
+  rm(placas)
 
 }
 

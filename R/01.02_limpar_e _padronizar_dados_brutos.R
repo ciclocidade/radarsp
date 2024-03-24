@@ -22,13 +22,15 @@ pasta_destino  <- '/home/livre/Desktop/Base_GtsRegionais/GitLab/api_radares_dado
 pasta_logreg  <- sprintf('%s/00_LOGREG', pasta_destino)
 pasta_procrev <- sprintf('%s/01_PRCREV/REV_%s', pasta_destino, lote_ano2)
 pasta_descart <- sprintf('%s/01_PRCREV/DSC/DSC_%s', pasta_destino, lote_ano2)
-pasta_volume  <- sprintf('%s/02_VOLUME/VOL_%s', pasta_destino, lote_ano2)
+pasta_volume1 <- sprintf('%s/02_VOLUME/VOL_TUDO/VOL_%s', pasta_destino, lote_ano2)
+pasta_volume2 <- sprintf('%s/02_VOLUME/VOL_TPVC/VOL_TPVC_%s', pasta_destino, lote_ano2)
 pasta_placas  <- sprintf('%s/03_PLACAS/TMP/PLC_%s', pasta_destino, lote_ano2)
 # pasta_analise <- sprintf('%s/04_VELMED/VM_%s_TXT', pasta_destino, lote_ano2)
 dir.create(pasta_logreg,  recursive = TRUE, showWarnings = TRUE)
 dir.create(pasta_procrev, recursive = TRUE, showWarnings = TRUE)
 dir.create(pasta_descart, recursive = TRUE, showWarnings = TRUE)
-dir.create(pasta_volume,  recursive = TRUE, showWarnings = TRUE)
+dir.create(pasta_volume1,  recursive = TRUE, showWarnings = TRUE)
+dir.create(pasta_volume2,  recursive = TRUE, showWarnings = TRUE)
 dir.create(pasta_placas,  recursive = TRUE, showWarnings = TRUE)
 # dir.create(pasta_analise, recursive = TRUE, showWarnings = TRUE)
 
@@ -54,8 +56,9 @@ rm(lote_ano2, f_pattern)
 
 
 for (arq in arquivos_radares$arqs) {
-  # arq <- arquivos_radares %>% slice(128) %>% pull()
+  # arq <- arquivos_radares %>% slice(320) %>% pull()
   # arq <- arquivos_radares %>% sample_n(1) %>% pull()
+  # arq <- arquivos_radares %>% head(1) %>% pull()
 
   # Registrar nome do arquivo
   basename <- str_replace(arq, sprintf('%s/', pasta_origem), '')
@@ -213,6 +216,19 @@ for (arq in arquivos_radares$arqs) {
   # A moda é o nome da coluna resultante na tabela
   mode <- as.integer(names(mode()))
 
+  # Abrir uma exceção aqui para 2014 ou 2015, em que o mode pode ser 51
+  if ((str_sub(lote_ano, 4, 7) == '2014' | str_sub(lote_ano, 4, 7) == '2015') & mode == 51) {
+    # Inserir dois zeros antes do número de registro, para transformar linhas
+    # que estão com 51 caracteres mas dentro do padrão esperado em 52 -
+    # ATENÇÃO: este regex para placa tem que mudar para anos mais recentes para
+    # considerar a placa Mercosul, que não existia ainda naqueles anos
+    dados <- dados %>% mutate(X1 = str_replace(X1, '(L[1234]([0-9]){19})(([0-9]){7}([A-Z ]){3}([0-9 ]){4}([0-9 ]){16})', '\\10\\3'))
+
+    # Atualizar moda
+    mode <- function() { return(sort(-table(nchar(dados$X1)))[1]) }
+    mode <- as.integer(names(mode()))
+  }
+
 
   # --------------------------------------------------------------------------
   # Separar bases de dados: linhas com tamanho = mode; linhas maiores que mode
@@ -237,10 +253,10 @@ for (arq in arquivos_radares$arqs) {
 
   # Alguns arquivos de descarte ficam enormes, podendo ter com várias linhas de
   # registros reais. Como as substituições por gsub demoram para serem feitas
-  # em arquivos grandes, arquivos com mais de 30 MB terão suas linhas quebradas
+  # em arquivos grandes, arquivos com mais de 25 MB terão suas linhas quebradas
   # com o sed. Isso porque muitos deles contém uma única linha gigantesca com
   # todos os registros concatenados, sem quebra de parágrafo entre eles
-  if (file.info(out_file)$size > 30000000) {
+  if (file.info(out_file)$size > 25000000) {
 
     # Definir um novo arquivo de saída
     out_file_tmp <- sprintf('%s/tmp_linhas_extensas_v%i_tmp.txt', pasta_destino, inst_paralela)
@@ -261,7 +277,9 @@ for (arq in arquivos_radares$arqs) {
 
     # Padrões de saída para 53 e 30 caracteres (com e sem registros de veículos)
     output_pattern1 <- '(L[1234]([0-9]){28}([A-Z0-9 ]){7}([0-9 ]){16})'
-    output_pattern2 <- '(L[1234]([0-9]){27}2)'
+    output_pattern2 <- '(L[1234]([0-9]){27}([A-Z0-9 ]){7}([0-9 ]){16})'
+    output_pattern3 <- '(L[1234]([0-9]){27}2)'
+    output_pattern4 <- '(L[1234]([0-9]){26}2)'
 
     # Separar arquivos que já estão no padrão dos que não estão
     out_file_tmp_ok <- sprintf('%s/tmp_linhas_extensas_v%i_tmp_OK.txt', pasta_destino, inst_paralela)
@@ -275,7 +293,15 @@ for (arq in arquivos_radares$arqs) {
         cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
 
         # Se arquivo tem 30 caracteres e está no padrão esperado, salvar como OK
-      } else if (nchar(line) == 30 & str_detect(line, output_pattern2)) {
+      } else if (nchar(line) == 52 & str_detect(line, output_pattern2)) {
+        # print(line)
+        # # Transformar de 52 caracteres para 53 incluindo 0 extra como primeiro número de registro
+        line <- str_replace(line, '(L[1234]([0-9]){19})(([0-9]){8}([A-Z0-9 ]){7}([0-9 ]){16})', '\\10\\3')
+
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Do contrário, salvar em arquivo de não OK para tratamento
+      } else if (nchar(line) == 30 & str_detect(line, output_pattern3)) {
         # print(line)
         cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
 
@@ -294,8 +320,10 @@ for (arq in arquivos_radares$arqs) {
     # L47821003709400456000
     file_str <- paste(readLines(out_file_tmp_nao_ok), collapse = '\n')
 
-    # Juntar registros cuja sigla do lote fazia parte da placa
+    # Juntar registros cuja sigla do lote fazia parte da placa (53 caracteres)
     file_str <- gsub('(L[1234]([0-9]){28}([A-Z]){2})\n(L[1234]([0-9]){3}([0-9 ]){16})', '\\1\\4', file_str, perl = TRUE)
+    # Juntar registros cuja sigla do lote fazia parte da placa (52 caracteres)
+    file_str <- gsub('(L[1234]([0-9]){27}([A-Z]){2})\n(L[1234]([0-9]){3}([0-9 ]){16})', '\\1\\4', file_str, perl = TRUE)
 
     # Sobrescrever arquivo de 'não OK'
     cat(file_str, file = out_file_tmp_nao_ok)
@@ -313,6 +341,25 @@ for (arq in arquivos_radares$arqs) {
         # print(line)
         cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
 
+        # Se arquivo tem 52 caracteres e está no padrão esperado, salvar como OK
+      } else if (nchar(line) == 52 & str_detect(line, output_pattern2)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Se arquivo tem 30 caracteres e está no padrão esperado, salvar como OK
+      } else if (nchar(line) == 30 & str_detect(line, output_pattern3)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+        # Se arquivo tem 29 caracteres e está no padrão esperado, salvar como OK
+      } else if (nchar(line) == 29 & str_detect(line, output_pattern4)) {
+        # print(line)
+        cat(line, sep = '\n', file = out_file_tmp_ok, append = TRUE)
+
+      # Se linha estiver vazia, não fazer nada
+      } else if (nchar(line) == 0) {
+        # print(line)
+
         # Do contrário, salvar de volta em arquivo de não OK
       } else {
         cat(line, sep = '\n', file = out_file_tmp_nao_ok, append = TRUE)
@@ -326,6 +373,9 @@ for (arq in arquivos_radares$arqs) {
 
     # Ler arquivo temporário das linhas que não estão OK como dataframe
     dados_tmp2 <- read_delim(out_file_tmp_nao_ok, delim = ';', col_types = cols(.default = "c"), col_names = FALSE)
+
+    # Remover todas as linhas que estiverem comente com 'X1' como conteúdo
+    dados_tmp2 <- dados_tmp2 %>% filter(X1 != 'X1')
     # head(dados_tmp2)
 
     # Remover arquivos temporários
@@ -336,7 +386,8 @@ for (arq in arquivos_radares$arqs) {
 
 
   } else {
-    # Se arquivo for menor do que 30MB, ler direto como string e inserir quebras de parágrafo com REGEX via gsub
+    # Se arquivo for menor do que 25 MB, ler direto como string e inserir
+    # quebras de parágrafo com REGEX via gsub
     file_str <- paste(readLines(out_file), collapse = '\n')
 
     # Reconhecer strings com 53 caracteres
@@ -390,9 +441,16 @@ for (arq in arquivos_radares$arqs) {
     file.remove(out_file)
 
     # Todas as linhas com string igual o menor que mode serão juntadas ao dataframe
-    # principal (dados)
-    dados_tmp2 <- dados_tmp %>% filter(nchar(X1) > mode)
-    dados_tmp  <- dados_tmp %>% filter(nchar(X1) <= mode)
+    # principal (dados) - cuidado especial para o ano de 2015, quando a moda dos
+    # arquivos pode ser 52 em vez de 53
+    if (mode == 52) {
+      dados_tmp2 <- dados_tmp %>% filter(nchar(X1) > 53)
+      dados_tmp  <- dados_tmp %>% filter(nchar(X1) <= 53)
+    } else {
+      dados_tmp2 <- dados_tmp %>% filter(nchar(X1) > mode)
+      dados_tmp  <- dados_tmp %>% filter(nchar(X1) <= mode)
+    }
+
 
   }
 
@@ -673,15 +731,14 @@ for (arq in arquivos_radares$arqs) {
   if (max_char_linhas == mode & (min_char_linhas == mode | min_char_linhas == 30)) {
     sprintf('min_char_linhas = %i, max_char_linhas = %i', min_char_linhas, max_char_linhas)
   } else {
-    print('ATENÇÃO - PROBLEMA NA EXTENSÃO DAS LINHAS')
+    print(sprintf('ATENÇÃO - PROBLEMA NA EXTENSÃO DAS LINHAS: MODA = %i, MAX LINHAS = %i',
+          mode, max_char_linhas))
   }
 
 
   # ----------------------------------------------------------------------------
   # Validação via colunas de tipo_reg, tipo_veic e class_veic
   # ----------------------------------------------------------------------------
-
-  # TODO - Incluir linhas descartadas aqui no arquivo de descarte?
 
   # Separar bases com 30 e 53 caracteres
   dados_30char <- dados %>% filter(nchar(X1) == 30)
@@ -843,11 +900,63 @@ for (arq in arquivos_radares$arqs) {
   # dados %>% filter(substr(X1, 17, 20) == '6824') %>% sample_n(20)
 
   # Escrever arquivo de volumetria
-  out_vol_file <- sprintf('%s/VOL_%s', pasta_volume, str_replace(basename, 'txt', 'csv'))
+  out_vol_file <- sprintf('%s/VOL_%s', pasta_volume1, str_replace(basename, 'txt', 'csv'))
   write_delim(volumes, out_vol_file, delim = ';')
 
   # Limpar ambiente
   rm(volumes, tp_reg_nao_2, tp_reg_2, out_vol_file)
+
+  # ----------------------------------------------------------------------------
+  # Puxar volumetria por local e tipo de veículo
+  # ----------------------------------------------------------------------------
+
+  # Para criar as volumetrias por tipo de veículo, não precisamos dos dados sem
+  # registros de veículos
+  tp_reg_nao_2 <-
+    dados %>%
+    filter(tipo_reg != '2') %>%
+    group_by(data, local, tipo_veic) %>%
+    tally() %>%
+    ungroup() %>%
+    pivot_wider(id_cols = c(data, local),
+                names_from = tipo_veic,
+                values_from = n)
+
+  # Puxar todos os dias e locais da base
+  dias_locais <- dados %>% select(data, local) %>% distinct()
+
+  # Juntar volumetria por tipo de veículo
+  volumes <-
+    dias_locais %>%
+    left_join(tp_reg_nao_2, by = c('data', 'local')) %>%
+    # Trocar NAs por 0
+    mutate(across(where(is.numeric), ~replace_na(.x, 0)))
+
+  # Checar por todas as colunas de tipo de veículo possíveis - se algum tipo
+  # estiver faltando, incluir
+  vol_col_names <- names(volumes)
+  if (!'0' %in% vol_col_names) {
+    volumes <- volumes %>% add_column('0' = 0, .after = 'local')
+  }
+  if (!'1' %in% vol_col_names) {
+    volumes <- volumes %>% add_column('1' = 0, .after = '0')
+  }
+  if (!'2' %in% vol_col_names) {
+    volumes <- volumes %>% add_column('2' = 0, .after = '1')
+  }
+  if (!'3' %in% vol_col_names) {
+    volumes <- volumes %>% add_column('3' = 0, .after = '2')
+  }
+
+  # Garantir que somente os tipos válidos 0, 1, 2 e 3 vão estar na base final
+  volumes <- volumes %>% select(data, local, '0', '1', '2', '3')
+
+  # Escrever arquivo de volumetria
+  out_vol_file <- sprintf('%s/VOL_TPVC_%s', pasta_volume2, str_replace(basename, 'txt', 'csv'))
+  write_delim(volumes, out_vol_file, delim = ';')
+
+  # Limpar ambiente
+  rm(volumes, vol_col_names, dias_locais, tp_reg_nao_2, out_vol_file)
 
 
   # ----------------------------------------------------------------------------
@@ -861,54 +970,77 @@ for (arq in arquivos_radares$arqs) {
   reg_linhas8 <- nrow(placas)
   perc_placas <- round(reg_linhas8 / reg_linhas7 * 100, 1)
 
-  # Agrupar veículos por placa e tipo de veículo - quantas classificações cada
-  # veículo teve?
-  placas <- placas %>% group_by(placa, tipo_veic) %>% tally() %>% ungroup()
-  placas <- placas %>% pivot_wider(placa, names_from = tipo_veic, values_from = n)
-  # sample_n(placas, 20)
 
-  placas <-
-    placas %>%
-    # sample_n(20) %>%
+  if (nrow(placas) > 0) {
+    # Agrupar veículos por placa e tipo de veículo - quantas classificações cada
+    # veículo teve?
+    placas <- placas %>% group_by(placa, tipo_veic) %>% tally() %>% ungroup()
+    placas <- placas %>% pivot_wider(placa, names_from = tipo_veic, values_from = n)
+    # sample_n(placas, 20)
 
-    # Substituir NAs por zero nas colunas numéricas
-    mutate(across(where(is.numeric), ~replace_na(.x, 0))) %>%
+    # Checar por todas as colunas de tipo de veículo possíveis - se algum tipo
+    # estiver faltando, incluir
+    placas_col_names <- names(placas)
+    if (!'0' %in% placas_col_names) {
+      placas <- placas %>% add_column('0' = 0, .after = 'placa')
+    }
+    if (!'1' %in% placas_col_names) {
+      placas <- placas %>% add_column('1' = 0, .after = '0')
+    }
+    if (!'2' %in% placas_col_names) {
+      placas <- placas %>% add_column('2' = 0, .after = '1')
+    }
+    if (!'3' %in% placas_col_names) {
+      placas <- placas %>% add_column('3' = 0, .after = '2')
+    }
 
-    # # Puxar nome da coluna que apresenta o valor máximo por linha - considerar somente colunas numéricas
-    # # https://stackoverflow.com/questions/67533157/how-to-use-dplyr-to-get-column-with-max-value-for-each-row
-    # # mutate(Class = names(.)[max.col(.)])
-    # # mutate(max = names(cur_data())[which.max(c_across(everything()))])
-    # mutate(class_pred = names(across(where(is.numeric)))[max.col(across(where(is.numeric)))]) %>%
+    placas <-
+      placas %>%
+      # sample_n(20) %>%
 
-    # Renomear tipos de veículos, para facilitar
-    # rename(moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`) %>%
-    select(placa, moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`)
+      # Substituir NAs por zero nas colunas numéricas
+      mutate(across(where(is.numeric), ~replace_na(.x, 0))) %>%
 
-  # # Contar quantas colunas possuem zero em cada linha - considerar somente colunas numéricas
-  # # https://stackoverflow.com/questions/11797216/count-number-of-zeros-per-row-and-remove-rows-with-more-than-n-zeros
-  # # DF[rowSums(DF == 0)]
-  # mutate(class_unic = rowSums(across(where(is.numeric)) != 0)) %>%
+      # # Puxar nome da coluna que apresenta o valor máximo por linha - considerar somente colunas numéricas
+      # # https://stackoverflow.com/questions/67533157/how-to-use-dplyr-to-get-column-with-max-value-for-each-row
+      # # mutate(Class = names(.)[max.col(.)])
+      # # mutate(max = names(cur_data())[which.max(c_across(everything()))])
+      # mutate(class_pred = names(across(where(is.numeric)))[max.col(across(where(is.numeric)))]) %>%
 
-  # # Calcular acurácia da classificação - para cada linha, somar a quantidade
-  # # de ocorrências e calcular a proporção do valor que mais aparece
-  # rowwise() %>%
-  # mutate(n_ocurr = moto + passeio + onibus + caminhao,
-  #        acuracia = round(max(moto, passeio, onibus, caminhao) / n_ocurr * 100, 2)) %>%
-  #
-  # # Remover o rowwise
-  # ungroup() %>%
-  #
-  # # Reordenar colunas
-  # select(placa, moto, passeio, onibus, caminhao, n_ocurr, class_unic, class_pred, acuracia)
+      # Renomear tipos de veículos, para facilitar
+      # rename(moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`) %>%
+      select(placa, moto = `0`, passeio = `1`, onibus = `2`, caminhao = `3`)
 
-  # sample_n(placas, 20)
+    # # Contar quantas colunas possuem zero em cada linha - considerar somente colunas numéricas
+    # # https://stackoverflow.com/questions/11797216/count-number-of-zeros-per-row-and-remove-rows-with-more-than-n-zeros
+    # # DF[rowSums(DF == 0)]
+    # mutate(class_unic = rowSums(across(where(is.numeric)) != 0)) %>%
 
-  # Escrever arquivo de placas
-  out_plac_file <- sprintf('%s/PLC_%s', pasta_placas, str_replace(basename, 'txt', 'csv'))
-  write_delim(placas, out_plac_file, delim = ';')
+    # # Calcular acurácia da classificação - para cada linha, somar a quantidade
+    # # de ocorrências e calcular a proporção do valor que mais aparece
+    # rowwise() %>%
+    # mutate(n_ocurr = moto + passeio + onibus + caminhao,
+    #        acuracia = round(max(moto, passeio, onibus, caminhao) / n_ocurr * 100, 2)) %>%
+    #
+    # # Remover o rowwise
+    # ungroup() %>%
+    #
+    # # Reordenar colunas
+    # select(placa, moto, passeio, onibus, caminhao, n_ocurr, class_unic, class_pred, acuracia)
+
+    # sample_n(placas, 20)
+
+    # Escrever arquivo de placas
+    out_plac_file <- sprintf('%s/PLC_%s', pasta_placas, str_replace(basename, 'txt', 'csv'))
+    write_delim(placas, out_plac_file, delim = ';')
+
+    # Limpar ambiente
+    rm(out_plac_file, placas_col_names)
+
+  }
 
   # Limpar ambiente
-  rm(placas, out_plac_file)
+  rm(placas)
 
 
   # ----------------------------------------------------------------------------

@@ -10,7 +10,6 @@
 library('tidyverse')
 library('tidylog')
 library('data.table')
-# library('arrow')
 
 
 # Variável principal - modificar cada vez que for rodar, por ano

@@ -19,7 +19,7 @@ dir.create(pasta_graficos, recursive = TRUE, showWarnings = TRUE)
 # Listar arquivos a serem processados
 f_pattern <- sprintf('^VOL_L[1-4]_%s[0-9]{4}.csv', ano)
 arquivos_volumes <-
-  list.files(pasta_origem, pattern = f_pattern, recursive = TRUE, full.names = TRUE) %>%
+  list.files(pasta_volume, pattern = f_pattern, recursive = TRUE, full.names = TRUE) %>%
   as.data.frame() %>%
   setNames('arqs')
 
@@ -29,7 +29,7 @@ arquivos_volumes <-
 # ------------------------------------------------------------------------------
 
 agrupar_volumetrias <- function(df_arquivos, string_pattern) {
-  # df_arquivos <- arquivos_volumes; string_pattern <- sprintf('VOL_L4_%s', ano)
+  # df_arquivos <- arquivos_volumes; string_pattern <- sprintf('VOL_L2_%s', ano)
 
   # Filtrar segmento de interesse (por lote) para processamento em paralelo
   volumes <- df_arquivos %>% filter(str_detect(arqs, string_pattern))
@@ -43,7 +43,8 @@ agrupar_volumetrias <- function(df_arquivos, string_pattern) {
   # Agrupar resultados por dia e local
   volumes <-
     volumes %>%
-    filter(str_detect(local, '[0-9]{4}')) %>%
+    # Coluna 0000 sempre será um erro de registro
+    filter(str_detect(local, '[0-9]{4}') & local != '0000') %>%
     group_by(data, local) %>%
     summarise(total = sum(n)) %>%
     ungroup() %>%
@@ -68,32 +69,96 @@ volumes_out <-
 # Alguns códigos de local estão vindo repetidos de lotes diferentes, provavelmente
 # por erros nos registros. Exemplos são cod_local 0001, 0002 e 2443
 cods_repetidos <- data.frame(cod_local = names(volumes_out)) %>% filter(str_detect(cod_local, 'x'))
-cods_repetidos
+cods_repetidos <- cods_repetidos %>% mutate(cod_local = str_replace(cod_local, '.x', '')) %>% arrange(cod_local)
+
+# Códigos repetidos podem ser um erro na base, pois um código de local não deveria
+# se repetir por lotes diferentes. Para os volumes, vamos assumir que o lote com
+# maior quantidade de dias com registros é o que traz os dados corretos - são
+# estes os que serão considerados nos volumes e gráficos. Ainda assim, vamos
+# registrar quais são os códigos que apareceram como repetidos para averiguação
+out_cods_rep <- sprintf('%s/VOL_%s_CODS_ENTRE_LOTES.csv', pasta_volume, ano)
+write_delim(cods_repetidos, out_cods_rep, delim = ';')
+
 
 # Para cada um desses códigos, descartar coluna com menos ocorrências
 if (nrow(cods_repetidos) > 0) {
+
   for (cod in cods_repetidos$cod_local) {
     # cod <- cods_repetidos$cod_local[1]
-
-    # cod é o código com o x depois: 2443.x
     print(cod)
-    # Substituir o x por y: 2443.y
-    cod2 <- str_replace(cod, 'x', 'y')
+
+    # Inserir .x e .y no número base do código local: 0099.x e 0099.y
+    cod1 <- sprintf('%s.x', cod); cod2 <- sprintf('%s.y', cod);
+
+
+    # # Pode ser que haja três colunas: 0000, 0000.x e 0000.y. Se for este o caso:
+    # if (base_cod %in% names(volumes_out)) {
+    #   # De cada uma das colunas, puxar o valor numérico. Caso ele exista nas
+    #   # duas colunas, somá-los
+    #   cod_agreg <-
+    #     volumes_out %>%
+    #     select(data, base_cod, cod, cod2) %>%
+    #     # Renomear colunas de código repetidas, para facilitar o processamento
+    #     setNames(c('data', 'w', 'x', 'y')) %>%
+    #     filter(!is.na(w) | !is.na(x) | !is.na(y)) %>%
+    #     # sample_n(20) %>%
+    #     mutate(across(where(is.numeric), ~replace_na(.x, 0)),
+    #            z = w + x + y) %>%
+    #     # Descartar colunas originais, mantendo só data e resultado
+    #     select(-c(w, x, y))
+    #
+    #   # Renomear colunas para reestabelecer código original
+    #   names(cod_agreg) <- c('data', base_cod)
+    #
+    #   # Substituir colunas .x e .y no df original pela dos resultados agregados
+    #   volumes_out <-
+    #     volumes_out %>%
+    #     select(-c(base_cod, cod, cod2)) %>%
+    #     left_join(cod_agreg, by = 'data')
+    #
+    #
+    #   # Se houver somente as colunas 0000.y e 0000.x:
+    # } else {
+    #   # De cada uma das colunas, puxar o valor numérico. Caso ele exista nas
+    #   # duas colunas, somá-los
+    #   cod_agreg <-
+    #     volumes_out %>%
+    #     select(data, cod, cod2) %>%
+    #     # Renomear colunas de código repetidas, para facilitar o processamento
+    #     setNames(c('data', 'x', 'y')) %>%
+    #     filter(!is.na(x) | !is.na(y)) %>%
+    #     # sample_n(20) %>%
+    #     mutate(across(where(is.numeric), ~replace_na(.x, 0)),
+    #            z = x + y) %>%
+    #     # Descartar colunas originais, mantendo só data e resultado
+    #     select(-c(x, y))
+    #
+    #   # Renomear colunas para reestabelecer código original
+    #   names(cod_agreg) <- c('data', base_cod)
+    #
+    #   # Substituir colunas .x e .y no df original pela dos resultados agregados
+    #   volumes_out <-
+    #     volumes_out %>%
+    #     select(-c(cod, cod2)) %>%
+    #     left_join(cod_agreg, by = 'data')
+    #
+    # }
 
     # Comparar quantas vezes aquele código aparece em cada coluna
-    comparativo1 <- volumes_out %>% select(all_of(cod))  %>% distinct() %>% nrow()
+    comparativo1 <- volumes_out %>% select(all_of(cod1))  %>% distinct() %>% nrow()
     comparativo2 <- volumes_out %>% select(all_of(cod2)) %>% distinct() %>% nrow()
+    print(sprintf('Ocorrências: %i vs %i', comparativo1, comparativo2))
 
     # Descartar coluna com menos ocorrência
     if (comparativo1 > comparativo2) {
-      volumes_out <- volumes_out %>% select(-cod2)
+      volumes_out <- volumes_out %>% select(-all_of(cod2))
 
     } else if (comparativo2 > comparativo1) {
-      volumes_out <- volumes_out %>% select(-cod)
+      volumes_out <- volumes_out %>% select(-all_of(cod1))
 
     } else {
       # Se as duas colunas têm a mesma quantidade, ambas são um erro, tanto faz
-      volumes_out <- volumes_out %>% select(-cod)
+      volumes_out <- volumes_out %>% select(-all_of(cod1))
 
     }
 
@@ -118,7 +183,7 @@ volumes_out <- volumes_out %>% filter(str_starts(data, ano))
 
 # sum(volumes_out$`6690`)
 
-# Quantos NAs temos na base e onde?
+# Quantos dias cada local ficou sem registro?
 dias_sem_registro <-
   # Somar quantidade de NAs em cada coluna
   colSums(is.na(volumes_out)) %>%

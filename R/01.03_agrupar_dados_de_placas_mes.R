@@ -93,12 +93,15 @@ for (mes in sprintf('%02d', 1:12)) {
   placas <- abrir_e_juntar_arquivos(pasta_placas, f_pattern)
   # head(placas, 20)
 
-  # Agrupar todos os registros de classificação de veículos por placa
-  placas <- agrupar_placas(placas)
+  if (nrow(placas) > 0) {
+    # Agrupar todos os registros de classificação de veículos por placa
+    placas <- agrupar_placas(placas)
 
-  # Gravar resultados
-  out_file <- sprintf('%s/PLC_%s%s.csv', pasta_plc_mes, lote_ano, mes)
-  write_delim(placas, out_file, delim = ';')
+    # Gravar resultados
+    out_file <- sprintf('%s/PLC_%s%s.csv', pasta_plc_mes, lote_ano, mes)
+    write_delim(placas, out_file, delim = ';')
+
+  }
 
   # Limpar ambiente
   rm(f_pattern, placas, out_file)
