@@ -1,7 +1,7 @@
 #' Download São Paulo speed camera data
 #'
 #' @description
-#' Download 15 min frequency speed camera records grouped by equipment. 
+#' Download speed camera records grouped by equipment and day. 
 #'
 #' @template start
 #' @template end
@@ -24,7 +24,7 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
                        id = NULL,    # string, XXXX
                        as_data_frame = FALSE,
                        show_progress = TRUE,
-                       cache = TRUE){         # define folder to save?
+                       cache = TRUE){
   
   ### check inputs
   checkmate::assert_string(start)
@@ -44,7 +44,7 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
     stop("If 'end' was defined, it must be after 'start'. 
          If 'end' is not defined, it will be taken as the same as 'start'. 
          Date are in the format: YYYY/MM/DD"
-         )
+    )
   }
   
   if (as.Date(start) < as.Date(paste0(year_first, "-01-01")) | as.Date(end) > as.Date(paste0(year_last, "-12-31"))) {
@@ -57,16 +57,16 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
     )
   }
   
-
+  
   time_interval <- stringr::str_replace_all(
     as.character(
       seq.Date(
         as.Date(start), 
         as.Date(end), 
         by = 1)
-      ), 
+    ), 
     "-", ""
-    )
+  )
   
   if (length(time_interval) > 366) {
     stop(
@@ -79,7 +79,7 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
     paste0("https://github.com/...../download/",
            "helpers/",
            "ids.csv")
-    )
+  )
   
   # check if IDs exist
   ids_not_found <- id[id %notin% helper_ids$local]
@@ -90,15 +90,15 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
         "Define valid IDs. IDs ",
         paste(ids_not_found, collapse = " ,"),
         " not found"
-        )
       )
+    )
   }
-
+  
   
   ### Get url
   files_url <- paste0("https://github.com/...../download/",
-                     "by15min/",
-                     time_interval, ".parquet")
+                      "byday/",
+                      time_interval, ".parquet")
   
   ### Download with MAP
   local_file <- map(
@@ -107,7 +107,7 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
     dir = tempdir(),
     show_progress = show_progress,
     cache = cache
-    )
+  )
   
   # check if download worked
   if(is.null(local_file)) { return(NULL) }

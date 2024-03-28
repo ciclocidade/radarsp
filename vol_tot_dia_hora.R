@@ -181,6 +181,17 @@ datas <- helper_zip %>%
   distinct(data) %>% 
   pull(data)
 
+datas_processadas <- 
+  str_replace(
+    list.files(
+      "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byhour/",
+      full.names = FALSE
+    ),
+    ".csv", "")
+
+# 1827
+datas <- datas[datas %notin% datas_processadas]
+
 for(i in seq_along(datas)){
   vol_tot_dia_hora(
     dia_inicio = datas[i],
