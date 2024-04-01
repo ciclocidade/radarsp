@@ -6,13 +6,11 @@
 # agrupar base em dia<>local, somando os volumes
 # retornar base e/ou salvar
 
-dia_inicio <- datas[1]
-dia_fim <- datas[1]
-
 vol_tot_dia <- function(
   dia_inicio = NULL,
   dia_fim = NULL,
   path_files = NULL,
+  path_save = NULL,
   return_df = FALSE,
   save_df = TRUE){
   
@@ -24,80 +22,51 @@ vol_tot_dia <- function(
     intervalo <- str_replace_all(
       as.character(
         seq.Date(
-          as.Date(dia_inicio, "%Y%m%d")-1, 
-          as.Date(dia_fim, "%Y%m%d")+1, 
+          as.Date(dia_inicio, "%Y%m%d"), 
+          as.Date(dia_fim, "%Y%m%d"), 
           by = 1)), 
       "-", "")
     
-    helper_zip_aux <- helper_zip %>% 
-      filter(str_detect(txt, paste(intervalo, collapse = "|")))
-    
-    vec_zip <- helper_zip_aux %>% 
-      pull(zip)
-    
-    # files_radares <- list.files(path_files, ".csv")
-    
-    files_to_read <- helper_zip_aux %>% 
-      pull(txt)
-    
-    # unzip files to a temporary directory
-    unzip_dir <- "DATA/temp/"
-    
-    for (i in seq_along(vec_zip)) {
-      vec_files <- unzip(paste0(path_files, vec_zip[i]), list = TRUE)$Name[str_detect(
-        unzip(paste0(path_files, vec_zip[i]), list = TRUE)$Name,
-        paste(files_to_read, collapse = "|"))]
-      
-      if (sum(file.exists(paste0(unzip_dir, vec_files[i]))) < length(vec_files)) {
-        unzip(paste0(path_files, vec_zip[i]), 
-              files = vec_files, 
-              overwrite = TRUE,
-              exdir = unzip_dir)
-      }
-    }
+    files_to_read <- list.files(
+      path = path_files,
+      pattern = paste(intervalo, collapse = "|"))
     
     if(length(files_to_read) == 0){
       print("Não há dados para o período especificado. \nDados vão de XXXX a XXXX")
     }else{
       df_radares <- map_df(
-        paste0(unzip_dir, files_to_read),
+        paste0(path_files, files_to_read),
         readr::read_delim, delim = "other", escape_double = FALSE, 
           col_names = FALSE, trim_ws = TRUE)
       
-      # L      data hora   loc  fx n_reg    tp placa   tiv com vel tocup  vm
-      # L1 20181231 185905 6605 1  00281484 0  DKZ7783 1   0   037 036   02384 000
+      # id      data  hora   volume
+      # 1111 20160101 00    163      39.29 8.68
       df_radares <- df_radares %>% 
-        filter(nchar(X1) == 53) 
         mutate(
-          data  = substr(X1, 3, 10),
-          cod_unico = substr(X1, 17, 20),
-          volume = 1)) %>%
+          id = substr(X1, 1, 4),
+          data  = substr(X1, 5, 12),
+          volume = substr(X1, 13, 16)) %>%
         select(-X1) 
       
       df_radares <- df_radares %>% 
-        left_join(helper_ids %>% select(cod_familia, cod_unico),
-                  by = "cod_unico") %>% 
-        mutate(local = ifelse(is.na(cod_familia), cod_unico, cod_familia))
-      
-      df_radares <- df_radares %>% 
         filter(data %in% intervalo[2:(length(intervalo)-1)]) %>% 
-        group_by(data, local) %>% 
-        summarise(volume = sum(volume, na.rm = TRUE)) %>% 
+        group_by(data, id) %>% 
+        summarise(volume = sum(as.numeric(volume), na.rm = TRUE)) %>% 
         ungroup() %>% 
-        mutate(data = str_pad(data, 8, "left"), 
-               local = str_pad(local, 4, "left"), 
+        mutate(id = str_pad(id, 4, "left"), 
+               data = str_pad(data, 8, "left"),
                volume = str_pad(volume, 6, "left")) # máximo 999 999 veículos no dia
       
       if(!return_df & save_df){
         df_radares <- df_radares %>% 
           ungroup() %>% 
-          mutate(X1 = paste0(data, local, volume)) %>% 
+          mutate(X1 = paste0(id, data, volume)) %>% 
           select(X1)
         
         # salvar arquivo sem delimitação de colunas
         write.table(df_radares,
                     paste0(
-                      path_to_save,
+                      path_save,
                       ifelse(
                         dia_inicio == dia_fim, 
                         dia_inicio,
@@ -107,7 +76,7 @@ vol_tot_dia <- function(
       }else if(return_df & save_df){
         write.table(df_radares %>% 
                       ungroup() %>% 
-                      mutate(X1 = paste0(data, local, volume)) %>% 
+                      mutate(X1 = paste0(id, data, volume)) %>% 
                       select(X1),
                     paste0(
                       path_to_save,
@@ -124,17 +93,20 @@ vol_tot_dia <- function(
   }
 }
 
-path_to_save <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byday/"
-path_files <- "C:/Users/econaplicada.B03-030BRP/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byhour/"
+path_save <- "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byday/"
+path_files <- "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/byhour/"
 
-datas <- c(paste0("2019010", c(1:9)),
-           paste0("201901", c(10:31)))
+datas <- helper_zip %>% 
+  mutate(data = paste0(year, month, day)) %>% 
+  distinct(data) %>% 
+  pull(data)
 
 for(i in seq_along(datas)){
   vol_tot_dia(
     dia_inicio = datas[i],
     dia_fim = datas[i],
     path_files = path_files,
+    path_save = path_save,
     return_df = FALSE,
     save_df = TRUE)
   
