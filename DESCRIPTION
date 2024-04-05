@@ -27,7 +27,9 @@ Imports:
     checkmate,
     dplyr,
     httr (>= 1.4.1),
-    tools
+    tools,
+    tidyverse,
+    magrittr
 Suggests:
     covr,
     ggplot2 (>= 3.3.1),
