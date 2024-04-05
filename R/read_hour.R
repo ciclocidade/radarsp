@@ -1,23 +1,3 @@
-#' Download São Paulo speed camera data
-#'
-#' @description
-#' Download 1 hour frequency speed camera records grouped by location. 
-#'
-#' @template start
-#' @template end
-#' @template id_to_filter
-#' @template as_data_frame
-#' @template show_progress
-#' @template cache
-#'
-#' @return An arrow `Dataset` or a `"data.frame"` object.
-#' @export
-#' @family Microdata
-#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
-#' # return data as arrow Dataset
-#' df <- read_hour(start = "2019/01/10",
-#'                 as_data_frame = TRUE)
-
 read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
                       end = NULL,             # string, YYYY/MM/DD
                       id_to_filter = NULL,    # string, XXXX

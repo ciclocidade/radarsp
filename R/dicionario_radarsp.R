@@ -1,19 +1,3 @@
-#' Download data dicitionary of São Paulo speed cameras
-#' 
-#' @description
-#' Download data dicitionary of São Paulo speed cameras
-#'
-#' @template as_data_frame
-#' @template show_progress
-#' @template cache
-#'
-#' @return An arrow `Dataset` or a `"data.frame"` object.
-#' @export
-#' @family Microdata
-#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
-#' # return data as arrow Dataset
-#' df <- dicionario_radares_sp()
-
 dicionario_radarsp <- function(as_data_frame = TRUE,
                                   show_progress = TRUE,
                                   cache = TRUE) {

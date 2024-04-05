@@ -1,14 +1,5 @@
-#' Download file from url
-#'
-#' @param file_url String. A url.
-#' @param showProgress Logical.
-#' @param cache Logical.
-
-#' @return A string to the address of the file in a tempdir
-#'
-#' @keywords internal
 download_file <- function(file_url = file_url,
-                          showProgress = showProgress,
+                          showProgress = show_progress,
                           cache = cache){ # nocov start
   
   # check input
@@ -57,15 +48,7 @@ download_file <- function(file_url = file_url,
 } # nocov end
 
 
-#' Safely use arrow to open a Parquet file
-#'
-#' This function handles some failure modes, including if the Parquet file is
-#' corrupted.
-#'
-#' @param filename A local Parquet file
-#' @return An `arrow::Dataset`
-#'
-#' @keywords internal
+
 arrow_open_dataset <- function(filename){
   
   tryCatch(
@@ -82,14 +65,8 @@ arrow_open_dataset <- function(filename){
   )
 }
 
-#' Message when caching file
-#'
-#' @param local_file The address of a file passed from the download_file function.
-#' @param cache Logical.
 
-#' @return A message
-#'
-#' @keywords internal
+
 cache_message <- function(local_file = parent.frame()$local_file,
                           cache = parent.frame()$cache){ # nocov start
   
