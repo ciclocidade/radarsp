@@ -24,13 +24,11 @@ radares_sp_env <- new.env(parent = emptyenv()) # nocov start
     radares_sp_env$data_release,
     "/dic_dados.parquet")
   
-  # local_file <- download_test(file_url = file_url)
-  
   local_file <- 
     download_file(
       file_url = file_url,
-      showProgress = TRUE,
-      cache = TRUE)
+      showProgress = FALSE,
+      cache = FALSE)
   
   radares_sp_env$id_radares <- arrow_open_dataset(local_file) %>% 
     collect() %>% 

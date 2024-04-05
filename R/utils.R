@@ -119,22 +119,3 @@ cache_message <- function(local_file = parent.frame()$local_file,
     message(paste("Baixando dados. Escolher a opção 'cache = TRUE' é fortemente recomendado para acelerar usos futuros do pacote. Se 'cache = TRUE' os dados serão salvos localmente em: ", dir_name))
   }
 } # nocov end
-
-
-
-download_test <- function(file_url = NULL){
-  # name of local file
-  file_name <- basename(file_url)
-  
-  # location of local file
-  local_file <- paste0(
-    "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/temp/",
-    file_name)
-  
-  try(silent = TRUE,
-      httr::GET(url=file_url,
-                httr::progress(),
-                httr::write_disk(local_file, overwrite = TRUE),
-                config = httr::config(ssl_verifypeer = FALSE))
-  )
-}
