@@ -56,7 +56,7 @@ df_dicionario_dados <- reference_df %>%
   distinct(id, .keep_all = TRUE)
 
 write_parquet(df_dicionario_dados, 
-              "DATA/parquet/dic_dados.parquet")
+              "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/UAB/tese/ch_overpass/data/intermediate/parquet/dic_dados.parquet")
 
 # table(reference_df$faixas, reference_df$faixas_api)
 

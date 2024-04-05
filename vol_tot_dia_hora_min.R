@@ -192,7 +192,7 @@ vol_tot_dia_hora_min <- function(
 # path_to_save <- "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/by15min/"
 
 datas <- helper_zip %>% 
-  filter(year == 2020) %>% 
+  filter(year == 2019 & month %in% c("01", "02", "03")) %>% 
   mutate(data = paste0(year, month, day)) %>% 
   distinct(data) %>% 
   pull(data)
@@ -202,8 +202,10 @@ for(i in seq_along(datas)){
   vol_tot_dia_hora_min(
     dia_inicio = datas[i],
     dia_fim = datas[i],
-    path_files = "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/UAB/tese/ch_overpass/data/input/radares_bruto/",
-    path_to_save = "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/Pacotes_R/radares_sp/DATA/by15min/",
+    path_files = 
+      "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/UAB/tese/ch_overpass/data/input/radares_bruto/",
+    path_to_save = 
+      "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/UAB/tese/ch_overpass/data/intermediate/by15min/",
     return_df = FALSE,
     save_df = TRUE)
   
