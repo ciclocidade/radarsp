@@ -1,20 +1,20 @@
-#' Set custom cache directory for censobr files
+#' Set custom cache directory for radares_sp files
 #'
-#' Set custom directory for caching files from the censobr package. If users
+#' Set custom directory for caching files from the radares_sp package. If users
 #' want to set a custom cache directory, the function needs to be run again in
 #' each new R session.
 #'
 #' @param path String. The path to an existing directory. It defaults to `path = NULL`,
 #'        to use the default directory
 #'
-#' @return A message indicating the directory where censobr files are cached.
+#' @return A message indicating the directory where radares_sp files are cached.
 #'
 #' @export
 #' @family Cache data
 #' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 #' # Set custom cache directory
 #' tempd <- tempdir()
-#' set_censobr_cache_dir(path = tempd)
+#' set_radares_sp_cache_dir(path = tempd)
 #'
 #' # back to default path
 #' set_radares_sp_cache_dir(path = NULL)
@@ -32,6 +32,6 @@ set_radares_sp_cache_dir <- function(path = NULL) {
     radares_sp_env$cache_dir <- tools::R_user_dir(cache_d, which = 'cache')
   }
   
-  message(paste("Arquivos do pacote radares_sp serão salvos (cached) em ", radares_sp_env$cache_dir))
+  message(paste("Arquivos do pacote 'radares_sp' serão salvos (cached) em ", radares_sp_env$cache_dir))
   
 }

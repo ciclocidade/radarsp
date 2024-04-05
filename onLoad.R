@@ -6,6 +6,10 @@ radares_sp_env <- new.env(parent = emptyenv()) # nocov start
   # data release
   radares_sp_env$data_release <- 'v.001'
   
+  # time coverage
+  radares_sp_env$year_first <- c(2019)
+  radares_sp_env$year_last <- c(2019)
+  
   # local cache dir
   cache_d <- paste0('radares_sp_env/data_release_', radares_sp_env$data_release)
   radares_sp_env$cache_dir <- tools::R_user_dir(cache_d, which = 'cache')

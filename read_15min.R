@@ -1,11 +1,11 @@
 #' Download São Paulo speed camera data
 #'
 #' @description
-#' Download 15 min frequency speed camera records grouped by equipment. 
+#' Download 15 min frequency speed camera records grouped by location 
 #'
 #' @template start
 #' @template end
-#' @template id
+#' @template id_to_filter
 #' @template as_data_frame
 #' @template show_progress
 #' @template cache
@@ -18,12 +18,12 @@
 #' df <- read_15min(start = "2019/01/10",
 #'                  as_data_frame = TRUE)
 
-read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
-                       end = NULL,   # string, YYYY/MM/DD
+read_15min <- function(start = "2019/01/01",   # string, YYYY/MM/DD
+                       end = NULL,             # string, YYYY/MM/DD
                        id_to_filter = NULL,    # string, XXXX
                        as_data_frame = FALSE,
                        show_progress = TRUE,
-                       cache = TRUE){         # define folder to save?
+                       cache = TRUE){          # define folder to save?
   
   ### check inputs
   checkmate::assert_string(start)
@@ -31,10 +31,6 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
   checkmate::assert_vector(id_to_filter, null.ok = TRUE)     # if string, must have four characters
   checkmate::assert_logical(as_data_frame)
   checkmate::assert_logical(cache)
-  
-  # time interval definition
-  year_first <- c(2016)
-  year_last <- c(2020)
   
   if (isFALSE(as_data_frame)) {
     print(
@@ -52,19 +48,19 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
   
   if (as.Date(start, "%Y/%m/%d") > as.Date(end, "%Y/%m/%d")) {
     stop("Se a data final foi definida ('end'), ela deve ser algum dia após a data inicial ('start') no período entre ",
-         year_first, "/01/01 and ",
-         year_last, "/12/31. ", 
+         radares_sp_env$year_first, "/01/01 and ",
+         radares_sp_env$year_last, "/12/31. ", 
          "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
          )
   }
   
-  if (as.Date(start) < as.Date(paste0(year_first, "/01/01"), "%Y/%m/%d") | 
-      as.Date(end) > as.Date(paste0(year_last, "/12/31"), "%Y/%m/%d")) {
+  if (as.Date(start) < as.Date(paste0(radares_sp_env$year_first, "/01/01"), "%Y/%m/%d") | 
+      as.Date(end) > as.Date(paste0(radares_sp_env$year_last, "/12/31"), "%Y/%m/%d")) {
     stop(
       paste0(
         "Defina datas válidas para o período entre ",
-        year_first, "/01/01 and ",
-        year_last, "/12/31. ",
+        radares_sp_env$year_first, "/01/01 and ",
+        radares_sp_env$year_last, "/12/31. ",
         "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
       )
     )
@@ -95,7 +91,7 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
         paste0(
           "Defina identificadores (id_to_filter) válidos para os locais. IDs ",
           paste(ids_not_found, collapse = " ,"),
-          " não foram encontrados. Use função 'radares_sp::data_dictionary()' para abrir tabela de referência com os ids existentes."
+          " não foram encontrados. Use função 'radares_sp::dicionario_radares_sp()' para abrir tabela de referência com os ids existentes."
         )
       )
     }

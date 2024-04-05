@@ -1,11 +1,11 @@
 #' Download São Paulo speed camera data
 #'
 #' @description
-#' Download 1 hour frequency speed camera records grouped by equipment. 
+#' Download 1 hour frequency speed camera records grouped by location. 
 #'
 #' @template start
 #' @template end
-#' @template id
+#' @template id_to_filter
 #' @template as_data_frame
 #' @template show_progress
 #' @template cache
@@ -15,54 +15,62 @@
 #' @family Microdata
 #' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 #' # return data as arrow Dataset
-#' df <- read_population(year = 2010,
-#'                       show_progress = FALSE)
-#'
-#'
-read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
-                       end = NULL,   # string, YYYY/MM/DD
-                       id = NULL,    # string, XXXX
-                       as_data_frame = FALSE,
-                       show_progress = TRUE,
-                       cache = TRUE){
+#' df <- read_hour(start = "2019/01/10",
+#'                 as_data_frame = TRUE)
+
+read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
+                      end = NULL,             # string, YYYY/MM/DD
+                      id_to_filter = NULL,    # string, XXXX
+                      as_data_frame = FALSE,
+                      show_progress = TRUE,
+                      cache = TRUE){          # define folder to save?
   
   ### check inputs
   checkmate::assert_string(start)
   checkmate::assert_string(end, null.ok = TRUE)
-  checkmate::assert_vector(id, null.ok = TRUE)     # if string, must have four characters
+  checkmate::assert_vector(id_to_filter, null.ok = TRUE)     # if string, must have four characters
   checkmate::assert_logical(as_data_frame)
+  checkmate::assert_logical(cache)
   
-  # time interval definition
-  year_first <- c(2016)
-  year_last <- c(2020)
-  
-  if (is.null(end)) {
-    end <- start
-  }
-  
-  if (as.Date(start) > as.Date(end)) {
-    stop("If 'end' was defined, it must be after 'start'. 
-         If 'end' is not defined, it will be taken as the same as 'start'. 
-         Date are in the format: YYYY/MM/DD"
+  if (isFALSE(as_data_frame)) {
+    print(
+      "Função retornará dados em formato 'parquet'. Se o período for maior do que 1 dia, os dados estarão em uma lista."
     )
   }
   
-  if (as.Date(start) < as.Date(paste0(year_first, "-01-01")) | as.Date(end) > as.Date(paste0(year_last, "-12-31"))) {
+  if (is.null(end)) {
+    end <- start
+    
+    print(paste0(
+      "Não foi informada uma data de fim de período. Os dados serão baixados apenas para o dia definido como inicial: ",
+      start))
+  }
+  
+  if (as.Date(start, "%Y/%m/%d") > as.Date(end, "%Y/%m/%d")) {
+    stop("Se a data final foi definida ('end'), ela deve ser algum dia após a data inicial ('start') no período entre ",
+         radares_sp_env$year_first, "/01/01 and ",
+         radares_sp_env$year_last, "/12/31. ", 
+         "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
+    )
+  }
+  
+  if (as.Date(start) < as.Date(paste0(radares_sp_env$year_first, "/01/01"), "%Y/%m/%d") | 
+      as.Date(end) > as.Date(paste0(radares_sp_env$year_last, "/12/31"), "%Y/%m/%d")) {
     stop(
       paste0(
-        "Define valid dates between ",
-        year_first, "-01-01 and ",
-        year_last, "-12-31"
+        "Defina datas válidas para o período entre ",
+        radares_sp_env$year_first, "/01/01 and ",
+        radares_sp_env$year_last, "/12/31. ",
+        "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
       )
     )
   }
   
-  
   time_interval <- stringr::str_replace_all(
     as.character(
       seq.Date(
-        as.Date(start), 
-        as.Date(end), 
+        as.Date(start, "%Y/%m/%d"), 
+        as.Date(end, "%Y/%m/%d"), 
         by = 1)
     ), 
     "-", ""
@@ -70,61 +78,68 @@ read_15min <- function(start = "2016/01/01", # string, YYYY/MM/DD
   
   if (length(time_interval) > 366) {
     stop(
-      "You can download up to 366 days of data at once"
+      "Para que o download não fique muito lento, você pode baixar até 366 dias de dados de uma vez"
     )
   }
   
-  ### Download url helper
-  helper_ids <- download_file(
-    paste0("https://github.com/...../download/",
-           "helpers/",
-           "ids.csv")
-  )
-  
-  # check if IDs exist
-  ids_not_found <- id[id %notin% helper_ids$local]
-  
-  if (length(ids_not_found) > 0) {
-    stop(
-      paste0(
-        "Define valid IDs. IDs ",
-        paste(ids_not_found, collapse = " ,"),
-        " not found"
+  if (isFALSE(is.null(id_to_filter))) {
+    # check if IDs exist
+    ids_not_found <- id_to_filter[id_to_filter %notin% radares_sp_env$id_radares]
+    
+    if (length(ids_not_found) > 0) {
+      stop(
+        paste0(
+          "Defina identificadores (id_to_filter) válidos para os locais. IDs ",
+          paste(ids_not_found, collapse = " ,"),
+          " não foram encontrados. Use função 'radares_sp::ddicionario_radares_sp()' para abrir tabela de referência com os ids existentes."
+        )
       )
-    )
+    }
   }
-  
   
   ### Get url
-  files_url <- paste0("https://github.com/...../download/",
-                      "byhour/",
-                      time_interval, ".parquet")
+  files_url <- paste0("https://github.com/ciclocidade/radares_sp/releases/download/data_v.001/",
+                      time_interval, "_60.parquet")
   
-  ### Download with MAP
-  local_file <- map(
-    files_url,
-    download_file,
-    dir = tempdir(),
-    show_progress = show_progress,
-    cache = cache
-  )
+  list_df <- list()
+  for (i in seq_along(files_url)) {
+    local_file <- download_file(file_url = files_url[i],
+                                showProgress = show_progress,
+                                cache = cache)
+    
+    # check if download worked
+    if(is.null(local_file)) { 
+      list_df[[i]] <- NULL } else {
+        ### read data
+        list_df[[i]] <- arrow_open_dataset(local_file)
+      }
+  }
   
-  # check if download worked
-  if(is.null(local_file)) { return(NULL) }
+  # Remove NULL objects from list
+  Filter(Negate(is.null), list_df)
   
-  ### read data
-  df <- arrow_open_dataset(local_file)
-  
-  ### Filter
-  if (!is.null(id)) {
-    df <- df %>% 
-      filter(local %in% id)
+  ### Filter for selected IDs or for IDs for which we have information
+  if (isFALSE(is.null(id_to_filter))) {
+    for (i in 1:length(list_df)) {
+      list_df[[i]] <- list_df[[i]] %>% 
+        filter(id %in% id_to_filter)
+    }
+  } else {
+    for (i in 1:length(list_df)) {
+      list_df[[i]] <- list_df[[i]] %>% 
+        filter(id %in% radares_sp_env$id_radares)
+    }
   }
   
   ### output format
-  if (isTRUE(as_data_frame)) { return( dplyr::collect(df) )
+  if (isTRUE(as_data_frame)) { 
+    for (i in 1:length(list_df)) {
+      list_df[[i]] <- list_df[[i]] %>% 
+        dplyr::collect()
+    }
+    return( dplyr::bind_rows(list_df) )
   } else {
-    return(df)
+    return( list_df )
   }
   
 }

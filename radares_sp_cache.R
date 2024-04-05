@@ -1,10 +1,10 @@
-#' Manage cached files from the censobr package
+#' Manage cached files from the radares_sp package
 #'
 #' @param list_files Logical. Whether to print a message with the address of all
-#'        censobr data sets cached locally. Defaults to `TRUE`.
-#' @param delete_file String. The file name (basename) of a censobr data set
+#'        radares_sp data sets cached locally. Defaults to `TRUE`.
+#' @param delete_file String. The file name (basename) of a radares_sp data set
 #'        cached locally that should be deleted. Defaults to `NULL`, so that no
-#'        file is deleted. If `delete_file = "all"`, then all cached censobr
+#'        file is deleted. If `delete_file = "all"`, then all cached radares_sp
 #'        files are deleted.
 #'
 #' @return A message indicating which file exist and/or which ones have been
@@ -16,7 +16,7 @@
 #' radares_sp_cache(list_files = TRUE)
 #'
 #' # delete particular file
-#' radares_sp_cache(delete_file = '20160101_24')
+#' radares_sp_cache(delete_file = '20190101_24')
 #'
 radares_sp_cache <- function(list_files = TRUE,
                              delete_file = NULL){
@@ -32,7 +32,7 @@ radares_sp_cache <- function(list_files = TRUE,
   files <- list.files(radares_sp_env$cache_dir, full.names = TRUE)
   
   # if wants to dele file
-  # delete_file = "20160101_24.parquet"
+  # delete_file = "20190101_24.parquet"
   if (!is.null(delete_file)) {
     
     # IF file does not exist, print message
@@ -50,7 +50,7 @@ radares_sp_cache <- function(list_files = TRUE,
     # Delete ALL file
     if (delete_file=='all') {
       
-      # delete any files from censobr, current and old data releases
+      # delete any files from radares_sp, current and old data releases
       dir_above <- dirname(radares_sp_env$cache_dir)
       unlink(dir_above, recursive = TRUE)
       message(paste0("Todos os arquivos foram deletados."))
