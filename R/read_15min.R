@@ -48,19 +48,19 @@ read_15min <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   
   if (as.Date(start, "%Y/%m/%d") > as.Date(end, "%Y/%m/%d")) {
     stop("Se a data final foi definida ('end'), ela deve ser algum dia após a data inicial ('start') no período entre ",
-         radares_sp_env$year_first, "/01/01 and ",
-         radares_sp_env$year_last, "/12/31. ", 
+         radarsp_env$year_first, "/01/01 and ",
+         radarsp_env$year_last, "/12/31. ", 
          "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
          )
   }
   
-  if (as.Date(start) < as.Date(paste0(radares_sp_env$year_first, "/01/01"), "%Y/%m/%d") | 
-      as.Date(end) > as.Date(paste0(radares_sp_env$year_last, "/12/31"), "%Y/%m/%d")) {
+  if (as.Date(start) < as.Date(paste0(radarsp_env$year_first, "/01/01"), "%Y/%m/%d") | 
+      as.Date(end) > as.Date(paste0(radarsp_env$year_last, "/12/31"), "%Y/%m/%d")) {
     stop(
       paste0(
         "Defina datas válidas para o período entre ",
-        radares_sp_env$year_first, "/01/01 and ",
-        radares_sp_env$year_last, "/12/31. ",
+        radarsp_env$year_first, "/01/01 and ",
+        radarsp_env$year_last, "/12/31. ",
         "Datas devem ser informadas no formato: 'YYYY/MM/DD'"
       )
     )
@@ -84,21 +84,21 @@ read_15min <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   
   if (isFALSE(is.null(id_to_filter))) {
     # check if IDs exist
-    ids_not_found <- id_to_filter[id_to_filter %notin% radares_sp_env$id_radares]
+    ids_not_found <- id_to_filter[id_to_filter %notin% radarsp_env$id_radares]
     
     if (length(ids_not_found) > 0) {
       stop(
         paste0(
           "Defina identificadores (id_to_filter) válidos para os locais. IDs ",
           paste(ids_not_found, collapse = " ,"),
-          " não foram encontrados. Use função 'radares_sp::dicionario_radares_sp()' para abrir tabela de referência com os ids existentes."
+          " não foram encontrados. Use função 'radarsp::dicionario_radarsp()' para abrir tabela de referência com os ids existentes."
         )
       )
     }
   }
   
   ### Get url
-  files_url <- paste0("https://github.com/ciclocidade/radares_sp/releases/download/data_v.001/",
+  files_url <- paste0("https://github.com/ciclocidade/radares_sp/releases/download/v.002/",
                      time_interval, "_15.parquet")
   
   list_df <- list()
@@ -127,7 +127,7 @@ read_15min <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   } else {
     for (i in 1:length(list_df)) {
       list_df[[i]] <- list_df[[i]] %>% 
-        filter(id %in% radares_sp_env$id_radares)
+        filter(id %in% radarsp_env$id_radares)
     }
   }
   

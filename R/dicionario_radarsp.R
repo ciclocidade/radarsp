@@ -29,6 +29,11 @@ dicionario_radarsp <- function(as_data_frame = TRUE,
     )
   }
   
+  ### Get url
+  file_url <- paste0("https://github.com/ciclocidade/radares_sp/releases/download/v.002/",
+                      "dic_dados", 
+                      ".parquet")
+  
   ### Download
   local_file <- download_file(file_url = file_url,
                               showProgress = show_progress,

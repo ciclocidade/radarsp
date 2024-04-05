@@ -19,10 +19,10 @@ download_file <- function(file_url = file_url,
   file_name <- basename(file_url)
   
   # create local dir
-  if (isTRUE(cache) & !dir.exists(radares_sp_env$cache_dir)) { dir.create(radares_sp_env$cache_dir, recursive=TRUE) }
+  if (isTRUE(cache) & !dir.exists(radarsp_env$cache_dir)) { dir.create(radarsp_env$cache_dir, recursive=TRUE) }
   
   # location of local file
-  local_file <- paste0(radares_sp_env$cache_dir,"/",file_name)
+  local_file <- paste0(radarsp_env$cache_dir,"/",file_name)
   
   # cache message
   cache_message(local_file, cache)
@@ -74,7 +74,7 @@ arrow_open_dataset <- function(filename){
       msg <- paste(
         "Dados salvos localmente parecem estar corrompidos. Por favor tente baixar os dados novamente usando 'cache = FALSE'.",
         "Se você usa um processador M2 ou M3, tente reinstalar o pacote 'arrow' usando install.packages('arrow', repos = c('https://apache.r-universe.dev'))",
-        sprintf("Você pode remover os dados corrompidos em 'radares_sp::radares_sp_cache(delete_file = \"%s\")'", filename),
+        sprintf("Você pode remover os dados corrompidos em 'radarsp::radarsp_cache(delete_file = \"%s\")'", filename),
         sep = "\n"
       )
       stop(msg)
