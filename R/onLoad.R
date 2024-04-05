@@ -4,7 +4,7 @@ radares_sp_env <- new.env(parent = emptyenv()) # nocov start
 .onLoad <- function(libname, pkgname){
   
   # data release
-  radares_sp_env$data_release <- 'v.001'
+  radares_sp_env$data_release <- 'v.002'
   
   # time coverage
   radares_sp_env$year_first <- c(2019)
