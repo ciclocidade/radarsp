@@ -1,3 +1,12 @@
+#' Download file from url
+#'
+#' @param file_url String. A url.
+#' @param showProgress Logical.
+#' @param cache Logical.
+
+#' @return A string to the address of the file in a tempdir
+#'
+#' @keywords internal
 download_file <- function(file_url = file_url,
                           showProgress = show_progress,
                           cache = cache){ # nocov start

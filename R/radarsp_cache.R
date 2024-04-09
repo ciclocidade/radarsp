@@ -1,5 +1,25 @@
+#' Manage cached files from the radarsp package
+#'
+#' @param list_files Logical. Whether to print a message with the address of all
+#'        radarsp data sets cached locally. Defaults to `TRUE`.
+#' @param delete_file String. The file name (basename) of a radarsp data set
+#'        cached locally that should be deleted. Defaults to `NULL`, so that no
+#'        file is deleted. If `delete_file = "all"`, then all cached radarsp
+#'        files are deleted.
+#'
+#' @return A message indicating which file exist and/or which ones have been
+#'         deleted from local cache directory.
+#' @export
+#' @family Cache data
+#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+#' # list all files cached
+#' radarsp_cache(list_files = TRUE)
+#'
+#' # delete particular file
+#' radarsp_cache(delete_file = '20190101_24')
+#'
 radarsp_cache <- function(list_files = TRUE,
-                             delete_file = NULL){
+                          delete_file = NULL){
   
   # check inputs
   checkmate::assert_logical(list_files)

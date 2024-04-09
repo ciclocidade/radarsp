@@ -30,7 +30,7 @@ radarsp_env <- new.env(parent = emptyenv()) # nocov start
       showProgress = FALSE,
       cache = TRUE)
   
-  radarsp_env$id_radares <- arrow_open_dataset(local_file)$id
+  radarsp_env$id_radares <- dplyr::collect(arrow_open_dataset(local_file))$id
   
   ## delete any files from old data releases
   dir_above <- dirname(radarsp_env$cache_dir)

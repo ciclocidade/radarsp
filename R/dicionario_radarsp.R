@@ -1,3 +1,19 @@
+#' Download São Paulo speed camera data
+#'
+#' @description
+#' Download data dictionary for package "radarsp"
+#'
+#' @param as_data_frame Logical. Whether to save a dataframe or an Arrow object. Defaults to `TRUE`.
+#' @param show_progress Logical. Whether to show progress bar. Defaults to `TRUE`.
+#' @param cache Logical. Whether to show progress bar. Defaults to `TRUE`.
+#'
+#' @return An arrow `Dataset` or a `"data.frame"` object.
+#' @export
+#' @family Microdata
+#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+#' # return data as arrow Dataset
+#' df <- dicionario_radarsp(as_data_frame = TRUE)
+#'  
 dicionario_radarsp <- function(as_data_frame = TRUE,
                                   show_progress = TRUE,
                                   cache = TRUE) {

@@ -14,9 +14,7 @@ Authors@R:
              role=c("ctb")),
       person(given = "Ciclocidade - Associação dos ciclistas urbanos da cidade de São Paulo",
              role = c("cph", "fnd")))
-Description: Baixe dados de equipamentos de fiscalização eletrônica da cidade de São Paulo.
-             O pacote se apoia na plataforma Arrow, que permite que as pessoas trabalhem com dados 
-             maiores-do-que-a-memória RAM de seus computadores usando as funções do pacote {dplyr}.
+Description: Baixe dados de equipamentos de fiscalização eletrônica da cidade de São Paulo. O pacote se apoia na plataforma Arrow, que permite que as pessoas trabalhem com dados maiores-do-que-a-memória RAM de seus computadores usando as funções do pacote {dplyr}.
 License: MIT + file LICENSE
 URL: https://github.com/ciclocidade/radares_sp
 BugReports: https://github.com/ciclocidade/radares_sp/issues
@@ -28,8 +26,8 @@ Imports:
     dplyr,
     httr (>= 1.4.1),
     tools,
-    tidyverse,
-    magrittr
+    magrittr,
+    tidyverse
 Suggests:
     covr,
     ggplot2 (>= 3.3.1),

@@ -1,3 +1,25 @@
+#' Download São Paulo speed camera data
+#'
+#' @description
+#' Download 1 hour frequency speed camera records grouped by location. 
+#'
+#' @param start String. Data to start the search. Format 'YYYY/MM/DD'. Defaults to `"2019/01/01"`.
+#' @param end String. Data to start the search. Format 'YYYY/MM/DD'. Defaults to `NULL`, so that end data equals to start date.
+#' @param id_to_filter String. Ids of speed cameras to filter for. Must be a 4 character string. Defaults to `NULL`, so all data is provided.
+#' @param as_data_frame Logical. Whether to save a dataframe or an Arrow object. Defaults to `TRUE`.
+#' @param show_progress Logical. Whether to show progress bar. Defaults to `TRUE`.
+#' @param cache Logical. Whether to show progress bar. Defaults to `TRUE`.
+#'
+#' @importFrom magrittr "%>%"
+#' 
+#' @return An arrow `Dataset` or a `"data.frame"` object.
+#' @export
+#' @family Microdata
+#' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+#' # return data as arrow Dataset
+#' df <- read_hour(start = "2019/01/10",
+#'                 as_data_frame = TRUE)
+#'                 
 read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
                       end = NULL,             # string, YYYY/MM/DD
                       id_to_filter = NULL,    # string, XXXX
@@ -64,7 +86,7 @@ read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   
   if (isFALSE(is.null(id_to_filter))) {
     # check if IDs exist
-    ids_not_found <- id_to_filter[id_to_filter %notin% radarsp_env$id_radares]
+    ids_not_found <- id_to_filter[!id_to_filter %in% radarsp_env$id_radares]
     
     if (length(ids_not_found) > 0) {
       stop(
@@ -102,12 +124,12 @@ read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   if (isFALSE(is.null(id_to_filter))) {
     for (i in 1:length(list_df)) {
       list_df[[i]] <- list_df[[i]] %>% 
-        filter(id %in% id_to_filter)
+        dplyr::filter(id %in% id_to_filter)
     }
   } else {
     for (i in 1:length(list_df)) {
       list_df[[i]] <- list_df[[i]] %>% 
-        filter(id %in% radarsp_env$id_radares)
+        dplyr::filter(id %in% radarsp_env$id_radares)
     }
   }
   
