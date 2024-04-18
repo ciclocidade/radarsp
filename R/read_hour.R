@@ -100,7 +100,7 @@ read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   }
   
   ### Get url
-  files_url <- paste0("https://github.com/ciclocidade/radares_sp/releases/download/v.002/",
+  files_url <- paste0("https://github.com/ciclocidade/radarsp/releases/download/v.002/",
                       time_interval, "_60.parquet")
   
   list_df <- list()
