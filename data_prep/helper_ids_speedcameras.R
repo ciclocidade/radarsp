@@ -39,9 +39,19 @@ reference_df <- reference_df %>%
 #   filter(is.na(lon_rev) | is.na(lat_rev))
 
 df_dicionario_dados <- reference_df %>% 
+  filter(velocidade_carro_moto != "#REF!") %>% 
   mutate(endereco = paste0(endereco_api, " ", referencia_api),
          lat = as.numeric(lat_rev),
-         lon = as.numeric(lon_rev)) %>% 
+         lon = as.numeric(lon_rev),
+         velocidade_carro_moto = 
+           ifelse(velocidade_carro_moto == "60/50",
+                  velocidade_carro_moto,
+                  str_sub(velocidade_carro_moto, 1, 2)),
+         velocidade_cam_oni = 
+           ifelse(velocidade_cam_oni == "60/50",
+                  velocidade_cam_oni,
+                  str_sub(velocidade_cam_oni, 1, 2))
+         ) %>% 
   rename(id_unico = cod_unico,
          id_familia = cod_familia,
          tp_equip = tipo_equip_api,
@@ -55,8 +65,12 @@ df_dicionario_dados <- reference_df %>%
          lat, lon) %>% 
   distinct(id, .keep_all = TRUE)
 
-write_parquet(df_dicionario_dados, 
-              "DATA/parquet/dic_dados.parquet")
+table(df_dicionario_dados$vel_carro_moto)
+table(df_dicionario_dados$vel_cam_oni)
+
+write_parquet(
+  df_dicionario_dados, 
+  "/Users/tainasouzapacheco/Library/CloudStorage/Dropbox/Academico/UAB/tese/ch_overpass/data/intermediate/parquet/dic_dados.parquet")
 
 # table(reference_df$faixas, reference_df$faixas_api)
 

@@ -86,22 +86,22 @@ cache_message <- function(local_file = parent.frame()$local_file,
   ## if file already exists
   # YES cache
   if (file.exists(local_file) & isTRUE(cache)) {
-    message('Lendo dados salvos localmente.')
+    message('Lendo dados (', file_name, ') salvos localmente.')
   }
   
   # NO cache
   if (file.exists(local_file) & isFALSE(cache)) {
-    message('Sobrepondo dados salvos localmente.')
+    message('Sobrepondo dados (', file_name, ') salvos localmente.')
   }
   
   ## if file does not exist yet
   # YES cache
   if (!file.exists(local_file) & isTRUE(cache)) {
-    message(paste("Baixando os dados e salvando (cache) para usos futuros."))
+    message(paste("Baixando os dados (", file_name, ") e salvando para usos futuros."))
   }
   
   # NO cache
   if (!file.exists(local_file) & isFALSE(cache)) {
-    message(paste("Baixando dados. Escolher a opção 'cache = TRUE' é fortemente recomendado para acelerar usos futuros do pacote. Se 'cache = TRUE' os dados serão salvos localmente em: ", dir_name))
+    message(paste("Baixando dados(", file_name, "). Escolher a opção 'cache = TRUE' é fortemente recomendado para acelerar usos futuros do pacote. Se 'cache = TRUE' os dados serão salvos localmente em: ", dir_name))
   }
 } # nocov end

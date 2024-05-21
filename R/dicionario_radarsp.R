@@ -15,8 +15,8 @@
 #' df <- dicionario_radarsp(as_data_frame = TRUE)
 #'  
 dicionario_radarsp <- function(as_data_frame = TRUE,
-                                  show_progress = TRUE,
-                                  cache = TRUE) {
+                               show_progress = TRUE,
+                               cache = TRUE) {
   
   ### check inputs
   checkmate::assert_logical(as_data_frame)
@@ -37,8 +37,7 @@ dicionario_radarsp <- function(as_data_frame = TRUE,
   ### Download
   local_file <- download_file(file_url = file_url,
                               showProgress = show_progress,
-                              cache = cache,
-                              as_data_frame = as_data_frame)
+                              cache = cache)
   
   # check if download worked
   if(is.null(local_file)) { return(NULL) }

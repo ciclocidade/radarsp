@@ -4,11 +4,11 @@
 #' Download 1 hour frequency speed camera records grouped by location. 
 #'
 #' @param start String. Data to start the search. Format 'YYYY/MM/DD'. Defaults to `"2019/01/01"`.
-#' @param end String. Data to start the search. Format 'YYYY/MM/DD'. Defaults to `NULL`, so that end data equals to start date.
-#' @param id_to_filter String. Ids of speed cameras to filter for. Must be a 4 character string. Defaults to `NULL`, so all data is provided.
+#' @param end String. Data to start the search. Format 'YYYY/MM/DD'. Optional. Defaults to `NULL`, so that end data equals to start date.
+#' @param id_to_filter String. Ids of speed cameras to filter for. Must be a 4 character string. Optional. Defaults to `NULL`, so all data is provided.
 #' @param as_data_frame Logical. Whether to save a dataframe or an Arrow object. Defaults to `TRUE`.
 #' @param show_progress Logical. Whether to show progress bar. Defaults to `TRUE`.
-#' @param cache Logical. Whether to show progress bar. Defaults to `TRUE`.
+#' @param cache Logical. Whether to store files locally. Defaults to `TRUE`.
 #'
 #' @importFrom magrittr "%>%"
 #' 
@@ -23,7 +23,7 @@
 read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
                       end = NULL,             # string, YYYY/MM/DD
                       id_to_filter = NULL,    # string, XXXX
-                      as_data_frame = FALSE,
+                      as_data_frame = TRUE,
                       show_progress = TRUE,
                       cache = TRUE){          # define folder to save?
   
@@ -100,8 +100,10 @@ read_hour <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   }
   
   ### Get url
-  files_url <- paste0("https://github.com/ciclocidade/radarsp/releases/download/v.002/",
-                      time_interval, "_60.parquet")
+  files_url <- paste0(
+    "https://github.com/ciclocidade/radarsp/releases/download/",
+    radarsp_env$data_release,
+    "_60.parquet")
   
   list_df <- list()
   for (i in seq_along(files_url)) {
