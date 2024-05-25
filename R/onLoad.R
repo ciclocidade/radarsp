@@ -20,7 +20,7 @@ radarsp_env <- new.env(parent = emptyenv()) # nocov start
     "/dic_dados.parquet")
   
   file_url <- paste0(
-    "https://github.com/ciclocidade/radares_sp/releases/download/",
+    "https://github.com/ciclocidade/radarsp/releases/download/",
     radarsp_env$data_release,
     "/dic_dados.parquet")
   
