@@ -4,7 +4,7 @@
 #'
 #' @section Usage:
 #' Por favor verifique nossas vinhetas e documentação em
-#' [website](https://github.com/ciclocidade/radares_sp/).
+#' [website](https://github.com/ciclocidade/radarsp/).
 #'
 #' @docType package
 #' @name radarsp
