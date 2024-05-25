@@ -1,18 +1,22 @@
-# radarsp: Baixe dados de volumetria e velocidade dos radares da cidade de São Paulo [DEFINIR LOGO]
+# radarsp: Baixe dados de volumetria e velocidade dos radares da cidade de São Paulo
 
-**radarsp** é um pacote que disponibilza dados de volumetria e velocidade dos radares (equipamentos de fiscalização eletrônica) da cidade de São Paulo. O pacote se apoia na [plataforma Arrow](https://arrow.apache.org/docs/r/), que permite que as pessoas trabalhem com dados maiores-do-que-a-memória RAM de seus computadores usando as funções do pacote [{dplyr}](https://arrow.apache.org/docs/r/articles/arrow.html#analyzing-arrow-data-with-dplyr). 
+**radarsp** é um pacote que disponibilza dados de volumetria e velocidade dos radares (equipamentos de fiscalização eletrônica) da cidade de São Paulo. O pacote se apoia na [plataforma Arrow](https://arrow.apache.org/docs/r/), que permite que as pessoas trabalhem com dados maiores-do-que-a-memória RAM de seus computadores usando as funções do pacote [dplyr](https://arrow.apache.org/docs/r/articles/arrow.html#analyzing-arrow-data-with-dplyr).
 
 
 ## Instalação
 
 ```R
-# install from CRAN
+# instalar pelo CRAN (em breve)
 install.packages("radarsp")
 
-# or use the development version with latest features
-utils::remove.packages('radarsp')
-remotes::install_github("ciclocidade/radarsp", ref="dev")
-library(radarsp)
+# instalar via repositório GitHub (já disponível)
+# você vai precisar do pacote remotes instalado: https://remotes.r-lib.org/
+remotes::install_github("ciclocidade/radarsp")
+# remover instalação
+utils::remove.packages("radarsp")
+
+# carregar pacote
+library("radarsp")
 ```
 
 
@@ -39,8 +43,8 @@ A sintaxe de todas as funções para ler dados do pacote **radarsp** operam sobr
 read_hour(
   start                  # início do intervalo de tempo (dia) no formato "YYYY/MM/DD"
   end = NULL             # fim do intervalo de tempo (dia) no formato "YYYY/MM/DD"
-  id_to_filter = NULL.   # identificador(es) de radar(es) para restringir a busca
-  as_data_frame = FALSE  # retorna um conjunto de dados Arrow ou um data.frame
+  id_to_filter = NULL    # identificador(es) de radar(es) para restringir a busca
+  as_data_frame = TRUE   # retorna um conjunto de dados Arrow ou um data.frame
   show_progress = TRUE   # mostra barra de progresso do download
   cache = TRUE           # armazena dados localmente para acesso mais veloz no futuro
   )
@@ -67,21 +71,21 @@ Se você quiser contribuir com **radarsp**, te pedimos que abra um *issue* expli
 
 -----
 
-## Créditos <img align="right" src="man/figures/logo_ciclo.jpeg?raw=true" alt="logo" width="180"></img>
+## Créditos <img align="right" src="man/figures/logo ciclocidade.jpg?raw=true" alt="logo" width="180"></img>
 
-O pacote **radarsp** é desenvolvido por um time de pesquisadores e pesquisadoras afiliados a [Ciclocidade](https://www.ciclocidade.org.br), a Associação dos Ciclistas Urbanos de São Paulo. Se você quiser citar o pacote, você pode usar a seguinte citação:
+O pacote **radarsp** é desenvolvido por um time de pesquisadores e pesquisadoras afiliados a [Ciclocidade](https://www.ciclocidade.org.br) - Associação dos Ciclistas Urbanos de São Paulo. Se você quiser citar o pacote, você pode usar a seguinte citação:
 
-- Pacheco, Tainá S.; Soares, Flávio (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, INSERIR LINK PARA O CRAN.
+- Pacheco, Tainá S.; De Freitas, Flávio S. (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, https://github.com/ciclocidade/radarsp.
 
 ```
 bibentry(
   bibtype  = "Manual",
   title       = "radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo",
-  author      = "Tainá S. Pacheco [aut, cre] and Flávio Soares [aut]",
+  author      = "Tainá S. Pacheco [aut, cre] and Flávio S. de Freitas [aut]",
   year        = 2024,
   version     = "v0.0.1",
-  url         = "INSERIR LINK PARA O CRAN",
-  textVersion = "Pacheco, Tainá S.; Soares, Flávio (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, INSERIR LINK PARA O CRAN."
+  url         = "https://github.com/ciclocidade/radarsp",
+  textVersion = "Pacheco, Tainá S.; Soares, Flávio (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, https://github.com/ciclocidade/radarsp."
 )
 
 ```
