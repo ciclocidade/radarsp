@@ -12,7 +12,7 @@ install.packages("radarsp")
 # instalar via repositório GitHub (já disponível)
 # você vai precisar do pacote remotes instalado: https://remotes.r-lib.org/
 remotes::install_github("ciclocidade/radarsp")
-# se você usa um processador M2 ou M3, instale usando
+# se você usa MacOS com processador M2 ou M3, instale com:
 install.packages('arrow', repos = c('https://apache.r-universe.dev'))
 
 # remover instalação
