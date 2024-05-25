@@ -30,7 +30,7 @@ dicionario_radarsp <- function(as_data_frame = TRUE,
   }
   
   ### Get url
-  file_url <- paste0("https://github.com/ciclocidade/radarsp/releases/download/v.002/",
+  file_url <- paste0("https://github.com/ciclocidade/radarsp/releases/download/v.004/",
                       "dic_dados", 
                       ".parquet")
   
