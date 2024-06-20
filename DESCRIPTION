@@ -16,8 +16,8 @@ Authors@R:
              role = c("cph", "fnd")))
 Description: Baixe dados de equipamentos de fiscalização eletrônica da cidade de São Paulo. O pacote se apoia na plataforma Arrow, que permite que as pessoas trabalhem com dados maiores-do-que-a-memória RAM de seus computadores usando as funções do pacote {dplyr}.
 License: MIT + file LICENSE
-URL: https://github.com/ciclocidade/radares_sp
-BugReports: https://github.com/ciclocidade/radares_sp/issues
+URL: https://github.com/ciclocidade/radarsp
+BugReports: https://github.com/ciclocidade/radarsp/issues
 Depends: 
     R (>= 4.0)
 Imports:
