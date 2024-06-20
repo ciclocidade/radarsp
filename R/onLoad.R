@@ -20,7 +20,7 @@ radarsp_env <- new.env(parent = emptyenv()) # nocov start
     "/dic_dados.parquet")
   
   file_url <- paste0(
-    "https://github.com/ciclocidade/radares_sp/releases/download/",
+    "https://github.com/ciclocidade/radarsp/releases/download/",
     radarsp_env$data_release,
     "/dic_dados.parquet")
   
@@ -28,7 +28,7 @@ radarsp_env <- new.env(parent = emptyenv()) # nocov start
     download_file(
       file_url = file_url,
       showProgress = FALSE,
-      cache = FALSE)
+      cache = TRUE)
   
   radarsp_env$id_radares <- dplyr::collect(arrow_open_dataset(local_file))$id
   
