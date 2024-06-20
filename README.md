@@ -78,7 +78,7 @@ Se você quiser contribuir com **radarsp**, te pedimos que abra um *issue* expli
 
 O pacote **radarsp** é desenvolvido por um time de pesquisadores e pesquisadoras afiliados a [Ciclocidade](https://www.ciclocidade.org.br) - Associação dos Ciclistas Urbanos de São Paulo. Se você quiser citar o pacote, você pode usar a seguinte citação:
 
-- Pacheco, Tainá S.; De Freitas, Flávio S. (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, https://github.com/ciclocidade/radarsp.
+- Pacheco, Tainá S.; De Freitas, Flávio S. (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.4, https://github.com/ciclocidade/radarsp.
 
 ```
 bibentry(
@@ -86,9 +86,9 @@ bibentry(
   title       = "radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo",
   author      = "Tainá S. Pacheco [aut, cre] and Flávio S. de Freitas [aut]",
   year        = 2024,
-  version     = "v0.0.1",
+  version     = "v0.0.4",
   url         = "https://github.com/ciclocidade/radarsp",
-  textVersion = "Pacheco, Tainá S.; Soares, Flávio (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.1, https://github.com/ciclocidade/radarsp."
+  textVersion = "Pacheco, Tainá S.; Soares, Flávio (2024) radarsp: Baixe dados dos equipamentos de fiscalização eletrônica da cidade de São Paulo. R package version v0.0.4, https://github.com/ciclocidade/radarsp."
 )
 
 ```
