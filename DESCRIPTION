@@ -1,7 +1,7 @@
 Type: Package
 Package: radarsp
 Title: Baixe dados de equipamentos de fiscalização eletrônica da cidade de São Paulo
-Version: 0.0.2
+Version: 0.0.4
 Authors@R: 
     c(person(given="Tainá S.", family="Pacheco", 
              email="pacheco.taina@gmail.com", 
