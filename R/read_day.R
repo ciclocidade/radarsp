@@ -103,6 +103,7 @@ read_day <- function(start = "2019/01/01",   # string, YYYY/MM/DD
   files_url <- paste0(
     "https://github.com/ciclocidade/radarsp/releases/download/",
     radarsp_env$data_release,
+    "/",
     time_interval, 
     "_24.parquet")
   
