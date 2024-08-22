@@ -14,6 +14,8 @@ install.packages("radarsp")
 remotes::install_github("ciclocidade/radarsp")
 # se você usa MacOS com processador M2 ou M3, instale com:
 install.packages('arrow', repos = c('https://apache.r-universe.dev'))
+# no linux, para pular compilação do arrow e agilizar a instalação, ver:
+# https://arrow.apache.org/docs/r/articles/install.html
 
 # remover instalação
 utils::remove.packages("radarsp")
