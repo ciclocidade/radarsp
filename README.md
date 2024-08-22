@@ -31,7 +31,7 @@ O pacote conta com 3 funções principais para fazer o download e ler os dados d
 2. `read_hour()`
 3. `read_15min()`
 
-**radarsp** inclui também uma função de suporte que ajudam as pessoas a entenderem a origem dos dados, apresentados informação detalhada sobre cada radar (equipamento de fiscalização eletrônica):
+**radarsp** inclui também uma função de suporte que ajuda as pessoas a entenderem a origem dos dados, apresentando informações detalhadas sobre cada radar (equipamento de fiscalização eletrônica):
 
 4. `dicionario_radarsp()`
 
