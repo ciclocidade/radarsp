@@ -39,7 +39,7 @@ reference_df <- reference_df %>%
 #   filter(is.na(lon_rev) | is.na(lat_rev))
 
 df_dicionario_dados <- reference_df %>% 
-  filter(velocidade_carro_moto != "#REF!") %>% 
+  filter(velocidade_carro_moto != "#REF!") %>%            #only one observation
   mutate(endereco = paste0(endereco_api, " ", referencia_api),
          lat = as.numeric(lat_rev),
          lon = as.numeric(lon_rev),
@@ -50,7 +50,9 @@ df_dicionario_dados <- reference_df %>%
          velocidade_cam_oni = 
            ifelse(velocidade_cam_oni == "60/50",
                   velocidade_cam_oni,
-                  str_sub(velocidade_cam_oni, 1, 2))
+                  str_sub(velocidade_cam_oni, 1, 2)),
+         tipo_equip_api = ifelse(tipo_equip_api == "Grupo - Fixo B", "Fixo - Grupo B", tipo_equip_api),
+         tipo_equip_api = ifelse(tipo_equip_api == "Fixo", "Fixo - Grupo A", tipo_equip_api)
          ) %>% 
   rename(id_unico = cod_unico,
          id_familia = cod_familia,
@@ -67,6 +69,7 @@ df_dicionario_dados <- reference_df %>%
 
 table(df_dicionario_dados$vel_carro_moto)
 table(df_dicionario_dados$vel_cam_oni)
+table(df_dicionario_dados$tp_equip)
 
 write_parquet(
   df_dicionario_dados, 
